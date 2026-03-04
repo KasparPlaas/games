@@ -4,7 +4,7 @@ Terviklik eestikeelne mängude loomise õppeplaan koos samm-sammult juhendite ja
 
 ## 🌐 Veebileht
 
-👉 **[Vaata veebilehte](https://KASUTAJANIMI.github.io/games/)**
+👉 **[Vaata veebilehte](https://kasparplaas.github.io/games/)**
 
 ## 📚 Moodulid
 
