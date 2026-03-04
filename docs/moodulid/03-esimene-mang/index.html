@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Moodul 03 — Ehita oma esimene täielik 2D mäng! Game loop, collision, skoor, raskusaste.">
+  <title>Moodul 03 · Esimene 2D Mäng — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo">
+        <span class="logo-icon">🎮</span>
+        <span>GameDev.ee</span>
+      </a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>03 · Esimene 2D Mäng</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size: 0.85rem;">MOODUL 03 · TASE 1 — ALGAJA</div>
+        <h1>🕹️ Esimene 2D Mäng — "Püüa Objekt"</h1>
+        <p class="module-subtitle">
+          Ehita oma esimene täielik mäng algusest lõpuni! Mängija liigub, objektid kukuvad, skoor kasvab,
+          raskusaste tõuseb ja high score salvestatakse.
+        </p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~4-5 tundi</span>
+          <span class="meta-item">📝 7 harjutust</span>
+          <span class="meta-item">🟢 Algaja</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>📋 Eeldused</h2>
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><p>Peaksid olema läbinud <a href="../02-canvas-pohialused/index.html">Moodul 02</a> — Canvas, animatsioon ja klaviatuuri sisend peavad olema tuttavad.</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎯 Mida Sa Ehitad</h2>
+        <p>Selle mooduli jooksul ehitad <strong>täieliku mängu</strong> kus:</p>
+        <ul style="list-style: none; padding: 0;">
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">🎮 Mängija liigub vasakule/paremale nooleklahvidega</li>
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">⭐ Taevast kukuvad mündid/tähhed mida tuleb püüda</li>
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">💀 Kukuvad ka ohtlikud objektid mida tuleb vältida</li>
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">📊 Skoorisüsteem — kogutud mündid = punktid</li>
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">❤️ Elusüsteem — 3 elu, ohtlik objekt = -1 elu</li>
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">📈 Raskusaste tõuseb aja jooksul</li>
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">🏆 High score salvestatakse localStorage'isse</li>
+          <li style="padding: 0.4rem 0; color: var(--text-secondary);">📋 Start menüü ja Game Over ekraan</li>
+        </ul>
+      </section>
+
+      <!-- Samm 1 -->
+      <section class="content-section">
+        <h2>📦 Samm 1 — Projekti Seadistamine</h2>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>mkdir puua-objekt
+cd puua-objekt
+git init
+
+touch index.html style.css game.js</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">index.html</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="et"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;🎮 Püüa Objekt!&lt;/title&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="game" width="600" height="700"&gt;&lt;/canvas&gt;
+  &lt;script src="game.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><p><strong>Commit kohe!</strong> <code>git add . && git commit -m "feat: initsialiseeri projekt"</code></p></div>
+        </div>
+      </section>
+
+      <!-- Samm 2 -->
+      <section class="content-section">
+        <h2>🏃 Samm 2 — Game Loop ja Mängija</h2>
+        <p>Alustame game loop'iga ja lisame mängija tegelase, mis liigub vasakule ja paremale.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">game.js — Game Loop + Mängija</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// ===== MÄNGU OLEK =====
+const GameState = { MENU: 'menu', PLAYING: 'playing', GAMEOVER: 'gameover' };
+let state = GameState.MENU;
+
+// ===== MÄNGIJA =====
+const player = {
+  width: 60,
+  height: 20,
+  x: 0,
+  y: 0,
+  speed: 7,
+  color: '#22c55e'
+};
+
+// Paiguta mängija alumisele osale
+player.x = (canvas.width - player.width) / 2;
+player.y = canvas.height - 50;
+
+// ===== SISEND =====
+const keys = {};
+window.addEventListener('keydown', (e) =&gt; { keys[e.key] = true; });
+window.addEventListener('keyup', (e) =&gt; { keys[e.key] = false; });
+
+// ===== UUENDAMINE =====
+function update() {
+  if (state !== GameState.PLAYING) return;
+
+  // Mängija liikumine
+  if (keys['ArrowLeft'] || keys['a'])  player.x -= player.speed;
+  if (keys['ArrowRight'] || keys['d']) player.x += player.speed;
+
+  // Ekraani piirid
+  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+}
+
+// ===== JOONISTAMINE =====
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (state === GameState.MENU) {
+    drawMenu();
+  } else if (state === GameState.PLAYING) {
+    drawGame();
+  } else if (state === GameState.GAMEOVER) {
+    drawGameOver();
+  }
+}
+
+function drawMenu() {
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 36px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🎮 Püüa Objekt!', canvas.width / 2, 250);
+
+  ctx.font = '18px Inter, sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('Püüa münde ⭐ ja väldi pomme 💀', canvas.width / 2, 300);
+
+  ctx.fillStyle = '#06b6d4';
+  ctx.font = 'bold 20px Inter, sans-serif';
+  ctx.fillText('Vajuta ENTER alustamiseks', canvas.width / 2, 400);
+}
+
+function drawGame() {
+  // Mängija
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  // Silmad (et mängija oleks armsam)
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(player.x + 15, player.y + 5, 8, 8);
+  ctx.fillRect(player.x + 37, player.y + 5, 8, 8);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(player.x + 18, player.y + 7, 4, 4);
+  ctx.fillRect(player.x + 40, player.y + 7, 4, 4);
+}
+
+function drawGameOver() {
+  ctx.fillStyle = '#ef4444';
+  ctx.font = 'bold 40px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('GAME OVER', canvas.width / 2, 280);
+
+  ctx.fillStyle = '#06b6d4';
+  ctx.font = '18px Inter, sans-serif';
+  ctx.fillText('Vajuta ENTER uuesti mängimiseks', canvas.width / 2, 400);
+}
+
+// ===== MENÜÜ INPUT =====
+window.addEventListener('keydown', (e) =&gt; {
+  if (e.key === 'Enter') {
+    if (state === GameState.MENU || state === GameState.GAMEOVER) {
+      startGame();
+    }
+  }
+});
+
+function startGame() {
+  state = GameState.PLAYING;
+  player.x = (canvas.width - player.width) / 2;
+}
+
+// ===== GAME LOOP =====
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();</code></pre>
+        </div>
+      </section>
+
+      <!-- Samm 3 -->
+      <section class="content-section">
+        <h2>⭐ Samm 3 — Kukuvad Objektid</h2>
+        <p>Lisame mündid (⭐) ja pommid (💀) mis kukuvad alla. Kasutame massiivi objektide hoidmiseks.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">game.js — Lisa enne "MENÜÜ INPUT" sektsiooni</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>// ===== KUKUVAD OBJEKTID =====
+let fallingObjects = [];
+let spawnTimer = 0;
+let spawnInterval = 60; // Kaadrit objektide vahel (väiksem = tihedam)
+let score = 0;
+let lives = 3;
+let gameTime = 0;
+
+function spawnObject() {
+  const isCoin = Math.random() > 0.3; // 70% mündid, 30% pommid
+
+  fallingObjects.push({
+    x: Math.random() * (canvas.width - 30),
+    y: -30,
+    width: 25,
+    height: 25,
+    speed: 2 + Math.random() * 2,
+    type: isCoin ? 'coin' : 'bomb'
+  });
+}
+
+function updateObjects() {
+  spawnTimer++;
+  gameTime++;
+
+  // Raskusaste tõuseb aja jooksul
+  if (gameTime % 600 === 0 && spawnInterval > 20) {
+    spawnInterval -= 5;
+  }
+
+  if (spawnTimer >= spawnInterval) {
+    spawnObject();
+    spawnTimer = 0;
+  }
+
+  for (let i = fallingObjects.length - 1; i >= 0; i--) {
+    const obj = fallingObjects[i];
+    obj.y += obj.speed;
+
+    // Collision detection (AABB)
+    if (
+      player.x < obj.x + obj.width &&
+      player.x + player.width > obj.x &&
+      player.y < obj.y + obj.height &&
+      player.y + player.height > obj.y
+    ) {
+      if (obj.type === 'coin') {
+        score += 10;
+      } else {
+        lives--;
+        if (lives <= 0) {
+          gameOver();
+        }
+      }
+      fallingObjects.splice(i, 1);
+      continue;
+    }
+
+    // Eemalda kui kukkus ekraanilt välja
+    if (obj.y > canvas.height) {
+      fallingObjects.splice(i, 1);
+    }
+  }
+}
+
+function drawObjects() {
+  fallingObjects.forEach(obj => {
+    ctx.font = '22px sans-serif';
+    ctx.fillText(obj.type === 'coin' ? '⭐' : '💀', obj.x, obj.y + 20);
+  });
+}
+
+function drawHUD() {
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 18px Inter, sans-serif';
+  ctx.fillStyle = '#eab308';
+  ctx.fillText('⭐ ' + score, 15, 30);
+
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText('❤️ '.repeat(lives), 15, 55);
+
+  // High score
+  const highScore = localStorage.getItem('puua-highscore') || 0;
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '14px Inter, sans-serif';
+  ctx.fillText('Parim: ' + highScore, canvas.width - 15, 30);
+  ctx.textAlign = 'left';
+}
+
+function gameOver() {
+  state = GameState.GAMEOVER;
+
+  // Salvesta high score
+  const highScore = parseInt(localStorage.getItem('puua-highscore') || 0);
+  if (score > highScore) {
+    localStorage.setItem('puua-highscore', score);
+  }
+}</code></pre>
+        </div>
+
+        <p>Nüüd uuenda <code>update()</code>, <code>drawGame()</code> ja <code>startGame()</code> funktsioone:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">game.js — Uuendatud funktsioonid</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>// Uuendatud update()
+function update() {
+  if (state !== GameState.PLAYING) return;
+
+  if (keys['ArrowLeft'] || keys['a'])  player.x -= player.speed;
+  if (keys['ArrowRight'] || keys['d']) player.x += player.speed;
+  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+  updateObjects(); // LISA SEE RIDA
+}
+
+// Uuendatud drawGame()
+function drawGame() {
+  drawObjects();  // LISA SEE
+
+  // Mängija
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(player.x + 15, player.y + 5, 8, 8);
+  ctx.fillRect(player.x + 37, player.y + 5, 8, 8);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(player.x + 18, player.y + 7, 4, 4);
+  ctx.fillRect(player.x + 40, player.y + 7, 4, 4);
+
+  drawHUD();  // LISA SEE
+}
+
+// Uuendatud drawGameOver()
+function drawGameOver() {
+  ctx.fillStyle = '#ef4444';
+  ctx.font = 'bold 40px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('GAME OVER', canvas.width / 2, 250);
+
+  ctx.fillStyle = '#eab308';
+  ctx.font = '24px Inter, sans-serif';
+  ctx.fillText('Skoor: ' + score, canvas.width / 2, 310);
+
+  const highScore = localStorage.getItem('puua-highscore') || 0;
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '18px Inter, sans-serif';
+  ctx.fillText('Parim tulemus: ' + highScore, canvas.width / 2, 350);
+
+  ctx.fillStyle = '#06b6d4';
+  ctx.fillText('Vajuta ENTER uuesti mängimiseks', canvas.width / 2, 420);
+  ctx.textAlign = 'left';
+}
+
+// Uuendatud startGame()
+function startGame() {
+  state = GameState.PLAYING;
+  player.x = (canvas.width - player.width) / 2;
+  fallingObjects = [];
+  score = 0;
+  lives = 3;
+  gameTime = 0;
+  spawnTimer = 0;
+  spawnInterval = 60;
+}</code></pre>
+        </div>
+
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div>
+            <p><strong>AABB Collision Detection</strong> (Axis-Aligned Bounding Box) kontrollib kas kaks ristkülikut kattuvad.
+            See on lihtne ja kiire — sobib enamikule 2D mängudele!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Git reminder -->
+      <section class="content-section">
+        <h2>🔀 Commiti Oma Progress!</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>git add .
+git commit -m "feat: lisa kukuvad objektid, collision, skoor ja elusüsteem"
+git push</code></pre>
+        </div>
+      </section>
+
+      <!-- Iseseisev -->
+      <section class="content-section">
+        <h2>🧑‍🚀 Iseseisev Projekt — "Kosmose Vältimine"</h2>
+        <div class="callout tip">
+          <span class="callout-icon">🚀</span>
+          <div>
+            <p><strong>Sama loogika, teine teema!</strong> Ehita mäng kus kosmoselaev (mängija) väldib asteroide.
+            Lisa: tausta tähed (liikuvad alla), lasertulistamine (tühik), vaenlase hävitamine = punktid.
+            Kasuta kõike mida siin õppisid!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Harjutused -->
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Game Loop ja FPS loendur</h4>
+              <p>Ehita game loop <code>requestAnimationFrame</code>-iga ja kuva ekraanil FPS number (kaadreid sekundis). Vihje: loe aega <code>performance.now()</code>-ga.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Mängija liikumine</h4>
+              <p>Loo mängija kes liigub vasakule/paremale nooleklahvidega. Mängija ei tohi ekraanilt välja minna.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Kukuvad objektid</h4>
+              <p>Lisa kukuvad objektid — iga 2 sekundi tagant tekib uus juhuslikust positsioonist. Objektid kukuvad erineva kiirusega.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>AABB Collision Detection</h4>
+              <p>Implementeeri AABB collision detection — mängija ja objekt kokkupõrge. Lisa visuaalne tagasiside (välgatus).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Skoor ja elusüsteem</h4>
+              <p>Lisa skoor (kogutud mündid) ja elud (3 elu, pomm = -1). Kuva mõlemad ekraanil (HUD).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Raskusastme tõus</h4>
+              <p>Mida kauem mängija mängib, seda kiiremini tekivad uued objektid ja seda kiiremini kukuvad. Lisa visuaalne "TASE TÕUSIS!" teade.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03" data-index="6" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Menüü, Game Over, High Score</h4>
+              <p>Lisa kolm ekraani: start menüü, mäng ise, game over. Salvesta high score <code>localStorage</code>-isse. Lisa "Proovi uuesti" nupp.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Navigation -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-2xl); padding-top: var(--space-xl); border-top: 1px solid var(--border-color);">
+        <a href="../02-canvas-pohialused/index.html" class="btn btn-secondary">← Moodul 02: Canvas & JS</a>
+        <a href="../../index.html#moodulid" class="btn btn-primary">Vaata Kõiki Mooduleid →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p>
+        <div class="footer-links">
+          <a href="../../index.html">Avaleht</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

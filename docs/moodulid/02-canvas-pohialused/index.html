@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Moodul 02 — HTML5 Canvas ja JavaScripti põhialused. Joonista, animeeri, interakteeru.">
+  <title>Moodul 02 · HTML5 Canvas & JavaScript — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo">
+        <span class="logo-icon">🎮</span>
+        <span>GameDev.ee</span>
+      </a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>02 · Canvas & JavaScript</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size: 0.85rem;">MOODUL 02 · TASE 1 — ALGAJA</div>
+        <h1>🎨 HTML5 Canvas & JavaScript Põhialused</h1>
+        <p class="module-subtitle">
+          Õpi joonistama Canvas-ile, animeerima objekte ja reageerima kasutaja sisendile.
+          See on alus kõigele mis järgneb!
+        </p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~3 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🟢 Algaja</span>
+        </div>
+      </div>
+
+      <!-- Eeldused -->
+      <section class="content-section">
+        <h2>📋 Eeldused</h2>
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><p>Enne seda moodulit peaksid olema läbinud <a href="../01-alustamine/index.html">Moodul 01</a> — VS Code, Git ja GitHub peavad olema seadistatud.</p></div>
+        </div>
+      </section>
+
+      <!-- Mida õpid -->
+      <section class="content-section">
+        <h2>🎯 Mida Sa Õpid</h2>
+        <ul style="list-style: none; padding: 0;">
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ HTML5 Canvas elemendi kasutamine</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ 2D konteksti joonistamisfunktsioonid</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Animatsiooniloop <code>requestAnimationFrame</code>-iga</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Klaviatuuri ja hiire sündmuste käsitlemine</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Lihtne interaktiivne graafika loomine</li>
+        </ul>
+      </section>
+
+      <!-- Samm 1 -->
+      <section class="content-section">
+        <h2>📦 Samm 1 — Projekti Loomine</h2>
+        <p>Loome uue projekti ja seadistame HTML faili koos Canvas elemendiga.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code># Loo uus projektikaust
+mkdir canvas-pohialused
+cd canvas-pohialused
+git init
+
+# Loo failid
+touch index.html style.css main.js</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">index.html</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="et"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;Canvas Põhialused&lt;/title&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="game" width="800" height="600"&gt;&lt;/canvas&gt;
+  &lt;script src="main.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">style.css</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #1a1a2e;
+}
+
+canvas {
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: #0f0f23;
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- Samm 2 -->
+      <section class="content-section">
+        <h2>🎨 Samm 2 — Canvas-ile Joonistamine</h2>
+        <p>Canvas 2D kontekst annab meile joonistamisfunktsioonid. Alustame lihtsatest kujunditest.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">main.js</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>// 1. Hangi Canvas element ja 2D kontekst
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// 2. Joonista ristkülik
+ctx.fillStyle = '#22c55e';       // Värv
+ctx.fillRect(50, 50, 100, 80);  // x, y, laius, kõrgus
+
+// 3. Joonista ring
+ctx.beginPath();
+ctx.arc(300, 200, 40, 0, Math.PI * 2); // x, y, raadius, algus, lõpp
+ctx.fillStyle = '#3b82f6';
+ctx.fill();
+ctx.closePath();
+
+// 4. Joonista joon
+ctx.beginPath();
+ctx.moveTo(400, 100);
+ctx.lineTo(600, 300);
+ctx.strokeStyle = '#ef4444';
+ctx.lineWidth = 3;
+ctx.stroke();
+ctx.closePath();
+
+// 5. Joonista tekst
+ctx.font = '24px Inter, sans-serif';
+ctx.fillStyle = '#e2e8f0';
+ctx.fillText('Tere, Canvas! 🎮', 250, 400);</code></pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div>
+            <p><strong>Canvas koordinaadid:</strong> (0, 0) on ülemises vasakus nurgas.
+            X kasvab paremale, Y kasvab <strong>alla</strong> (mitte üles nagu matemaatikas!).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Samm 3 -->
+      <section class="content-section">
+        <h2>🔄 Samm 3 — Animatsiooniloop</h2>
+        <p>Mängudes ei joonista me ainult ühe korra — me joonistame <strong>60 korda sekundis</strong>. Selleks kasutame <code>requestAnimationFrame</code>.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">main.js — Animeeritud pall</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// Palli andmed
+const ball = {
+  x: 100,
+  y: 100,
+  radius: 20,
+  dx: 3,  // kiirus x-teljel
+  dy: 2,  // kiirus y-teljel
+  color: '#06b6d4'
+};
+
+function update() {
+  // Liiguta palli
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  // Põrka servadest tagasi
+  if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+    ball.dx = -ball.dx;
+  }
+  if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+    ball.dy = -ball.dy;
+  }
+}
+
+function draw() {
+  // Puhasta ekraan
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Joonista pall
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+  ctx.fillStyle = ball.color;
+  ctx.fill();
+  ctx.closePath();
+}
+
+function gameLoop() {
+  update();       // Uuenda loogikat
+  draw();         // Joonista uus kaader
+  requestAnimationFrame(gameLoop);  // Kutsu uuesti (~60fps)
+}
+
+// Käivita!
+gameLoop();</code></pre>
+        </div>
+      </section>
+
+      <!-- Samm 4 -->
+      <section class="content-section">
+        <h2>⌨️ Samm 4 — Klaviatuuri Sisend</h2>
+        <p>Nüüd lisame klaviatuuriga juhtimise — mängija saab WASD klahvidega liikuda.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">main.js — Klaviatuuriga juhtimine</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// Mängija
+const player = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  size: 40,
+  speed: 5,
+  color: '#22c55e'
+};
+
+// Jälgi milliseid klahve hoitakse all
+const keys = {};
+
+window.addEventListener('keydown', (e) => {
+  keys[e.key.toLowerCase()] = true;
+});
+
+window.addEventListener('keyup', (e) => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+function update() {
+  // WASD liikumine
+  if (keys['w'] || keys['arrowup'])    player.y -= player.speed;
+  if (keys['s'] || keys['arrowdown'])  player.y += player.speed;
+  if (keys['a'] || keys['arrowleft'])  player.x -= player.speed;
+  if (keys['d'] || keys['arrowright']) player.x += player.speed;
+
+  // Hoia mängija ekraanil
+  player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
+  player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Joonista mängija
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+
+  // Juhised
+  ctx.font = '16px Inter, sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('Kasuta WASD või nooleklahve liikumiseks', 10, 30);
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();</code></pre>
+        </div>
+      </section>
+
+      <!-- Samm 5 -->
+      <section class="content-section">
+        <h2>🖱️ Samm 5 — Hiire Sisend</h2>
+        <p>Lisa hiire jälgimine — ring jälgib kursori positsiooni sujuvalt kasutades lineaarset interpolatsiooni (lerp).</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">main.js — Hiire jälgimine (lerp)</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const follower = { x: 400, y: 300, radius: 15 };
+const mouse = { x: 400, y: 300 };
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+});
+
+// Lineaarne interpolatsioon — sujuv liikumine
+function lerp(start, end, factor) {
+  return start + (end - start) * factor;
+}
+
+function update() {
+  // Liigu hiire suunas, aga sujuvalt (factor 0.05 = aeglane, 0.3 = kiire)
+  follower.x = lerp(follower.x, mouse.x, 0.08);
+  follower.y = lerp(follower.y, mouse.y, 0.08);
+}
+
+function draw() {
+  // Poolläbipaistev puhastus = jäljeefekt!
+  ctx.fillStyle = 'rgba(15, 15, 35, 0.15)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Joonista jälgija
+  ctx.beginPath();
+  ctx.arc(follower.x, follower.y, follower.radius, 0, Math.PI * 2);
+  ctx.fillStyle = '#a855f7';
+  ctx.fill();
+  ctx.closePath();
+
+  // Joonista sihtpunkt
+  ctx.beginPath();
+  ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#ef4444';
+  ctx.fill();
+  ctx.closePath();
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();</code></pre>
+        </div>
+      </section>
+
+      <!-- Git commit reminder -->
+      <section class="content-section">
+        <h2>🔀 Ära Unusta Commitida!</h2>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>git add .
+git commit -m "feat: lisa Canvas põhialused — joonistamine, animatsioon, input"
+git push</code></pre>
+        </div>
+      </section>
+
+      <!-- Harjutused -->
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <p>Kinnista õpitut nende 5 harjutusega!</p>
+
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-02" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Joonista Eesti lipp</h4>
+              <p>Joonista Canvas-ile Eesti lipp — kolm horisontaalset ristkülikut: sinine (#0072CE), must (#000000), valge (#FFFFFF). Lipp peab olema proportsionaalne (7:11).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-02" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Animeeritud põrkav pall</h4>
+              <p>Loo pall mis põrkab ekraani kõigist neljast servast tagasi. Lisa igal põrkel juhuslik värvivahetus.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-02" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>WASD-ga juhitav ruut</h4>
+              <p>Loo WASD-ga liigutatav ruut, mis ei saa ekraanilt välja minna. Lisa kiiruse kuva (pikslid/kaader).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-02" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Hiire jälgija lerpiga</h4>
+              <p>Loo ring mis jälgib hiire kursori positsiooni sujuvalt. Katse erinevaid lerp väärtusi (0.02, 0.1, 0.5) — mis tundub loomulik?</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-02" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Kombineeri kõik!</h4>
+              <p>Loo stseen kus: WASD-mängija liigub, hiire sihtpunkt on nähtav, taust on animeeritud (liikuvad tähed/osakesed). Commiti tulemus GitHubi!</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Navigation -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-2xl); padding-top: var(--space-xl); border-top: 1px solid var(--border-color);">
+        <a href="../01-alustamine/index.html" class="btn btn-secondary">← Moodul 01: Arenduskeskkond</a>
+        <a href="../03-esimene-mang/index.html" class="btn btn-primary">Järgmine: Esimene Mäng →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p>
+        <div class="footer-links">
+          <a href="../../index.html">Avaleht</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

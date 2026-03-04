@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Eestikeelne mängude loomise õppeplaan — nullist spetsialistini. 2D ja 3D mängud, Git, AI integratsioon.">
+  <meta property="og:title" content="🎮 Mängude Loomine — Nullist Spetsialistini">
+  <meta property="og:description" content="Terviklik eestikeelne mängude loomise kursus. Samm-sammult juhendid, harjutused ja projektid.">
+  <meta property="og:type" content="website">
+  <title>🎮 Mängude Loomine — Nullist Spetsialistini</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        <span class="logo-icon">🎮</span>
+        <span>GameDev.ee</span>
+      </a>
+
+      <nav class="header-nav">
+        <a href="#moodulid" class="active">Moodulid</a>
+        <a href="#roadmap">Teekond</a>
+        <a href="https://github.com" target="_blank" rel="noopener">GitHub ↗</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="container hero-content">
+      <h1>
+        Mängude Loomine<br>
+        <span class="highlight">Nullist Spetsialistini</span>
+      </h1>
+      <p class="subtitle">
+        Terviklik eestikeelne õppeplaan — samm-sammult juhendid, praktilised harjutused
+        ja päris projektid. Alusta algusest ja jõua professionaalse tasemeni.
+      </p>
+
+      <div class="cta-group">
+        <a href="moodulid/01-alustamine/index.html" class="btn btn-primary">
+          🚀 Alusta Õppimist
+        </a>
+        <a href="#moodulid" class="btn btn-secondary">
+          📋 Vaata Kõiki Mooduleid
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="number">23</span>
+          <span class="label">Moodulit</span>
+        </div>
+        <div class="hero-stat">
+          <span class="number">130+</span>
+          <span class="label">Harjutust</span>
+        </div>
+        <div class="hero-stat">
+          <span class="number">5</span>
+          <span class="label">Taset</span>
+        </div>
+        <div class="hero-stat">
+          <span class="number">2D→3D</span>
+          <span class="label">Teekond</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Progress ===== -->
+  <section class="progress-section">
+    <div class="container">
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar-fill" style="width: 0%"></div>
+      </div>
+      <div class="progress-info">
+        <span class="progress-count">0 / 130 harjutust</span>
+        <span class="progress-text">0%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Search ===== -->
+  <section style="padding: var(--space-xl) 0 0;">
+    <div class="container">
+      <div class="search-wrapper" style="margin: 0 auto;">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Otsi moodulit, teemat, tehnoloogiat...">
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Modules ===== -->
+  <section class="modules-section" id="moodulid">
+    <div class="container">
+      <div class="section-header">
+        <h2>📚 Õppemoodulid</h2>
+        <p>Iga moodul sisaldab juhendatud projekti ja iseseisvat harjutust. Liigu omas tempos!</p>
+      </div>
+
+      <!-- ====== TASE 1 ====== -->
+      <div class="level-group">
+        <div class="level-header">
+          <div class="level-badge green">🟢</div>
+          <div class="level-info">
+            <h3>Tase 1 — Algaja</h3>
+            <p>Nullist alustamine. Arenduskeskkond, Canvas, esimene mäng.</p>
+          </div>
+        </div>
+
+        <div class="modules-grid">
+
+          <a href="moodulid/01-alustamine/index.html" class="module-card green" data-module="mod-01" data-exercises="5">
+            <div class="module-number">MOODUL 01</div>
+            <h4>Arenduskeskkonna Seadistamine</h4>
+            <p>Paigalda VS Code, Node.js, Git. Loo esimene repo, tee esimene commit ja push GitHubi.</p>
+            <div class="module-tags">
+              <span class="tag">VS Code</span>
+              <span class="tag">Git</span>
+              <span class="tag">GitHub</span>
+              <span class="tag">Terminal</span>
+              <span class="tag">SSH</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="moodulid/02-canvas-pohialused/index.html" class="module-card green" data-module="mod-02" data-exercises="5">
+            <div class="module-number">MOODUL 02</div>
+            <h4>HTML5 Canvas & JavaScript Põhialused</h4>
+            <p>Joonista Canvas-ile kujundeid, liiguta objekte klaviatuuri ja hiirega. Interaktiivne graafika.</p>
+            <div class="module-tags">
+              <span class="tag">Canvas</span>
+              <span class="tag">JavaScript</span>
+              <span class="tag">Animation</span>
+              <span class="tag">Events</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="moodulid/03-esimene-mang/index.html" class="module-card green" data-module="mod-03" data-exercises="7">
+            <div class="module-number">MOODUL 03</div>
+            <h4>Esimene 2D Mäng — "Püüa Objekt"</h4>
+            <p>Ehita oma esimene täielik mäng! Game loop, collision detection, skoor, raskusastme tõus.</p>
+            <div class="module-tags">
+              <span class="tag">Game Loop</span>
+              <span class="tag">Collision</span>
+              <span class="tag">Skoor</span>
+              <span class="tag">localStorage</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 7 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card green" data-module="mod-03b" data-exercises="5">
+            <div class="module-number">MOODUL 03b</div>
+            <h4>Mängu Matemaatika Põhialused</h4>
+            <p>Vektorid, trigonomeetria, lineaarne interpolatsioon — matemaatika mis mänge ellu äratab.</p>
+            <div class="module-tags">
+              <span class="tag">Vektorid</span>
+              <span class="tag">Trigonomeetria</span>
+              <span class="tag">Lerp</span>
+              <span class="tag">Partiklid</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- ====== TASE 2 ====== -->
+      <div class="level-group">
+        <div class="level-header">
+          <div class="level-badge yellow">🟡</div>
+          <div class="level-info">
+            <h3>Tase 2 — Edasijõudnud Algaja</h3>
+            <p>Git süvitsi, Phaser.js mängumootor, graafika, heli, TypeScript.</p>
+          </div>
+        </div>
+
+        <div class="modules-grid">
+
+          <a href="#" class="module-card yellow" data-module="mod-04" data-exercises="6">
+            <div class="module-number">MOODUL 04</div>
+            <h4>Git Versioonihaldus Süvitsi</h4>
+            <p>Branching, merging, pull requestid, konfliktide lahendamine, tagid ja release'id.</p>
+            <div class="module-tags">
+              <span class="tag">Branch</span>
+              <span class="tag">Merge</span>
+              <span class="tag">Rebase</span>
+              <span class="tag">PR</span>
+              <span class="tag">Tags</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 6 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card yellow" data-module="mod-05" data-exercises="8">
+            <div class="module-number">MOODUL 05</div>
+            <h4>2D Mängumootor — Phaser.js</h4>
+            <p>Loo platformer Phaser.js-iga — spraidid, füüsika, tilemapid, mitme tasemega mäng.</p>
+            <div class="module-tags">
+              <span class="tag">Phaser.js</span>
+              <span class="tag">Vite</span>
+              <span class="tag">Physics</span>
+              <span class="tag">Tilemap</span>
+              <span class="tag">Scenes</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 8 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card yellow" data-module="mod-06" data-exercises="6">
+            <div class="module-number">MOODUL 06</div>
+            <h4>Graafika & Heli</h4>
+            <p>Pixel art, sprite sheet'id, animatsioonid, taustamuusika, heliefektid, parallax scrolling.</p>
+            <div class="module-tags">
+              <span class="tag">Pixel Art</span>
+              <span class="tag">Piskel</span>
+              <span class="tag">Howler.js</span>
+              <span class="tag">Tiled</span>
+              <span class="tag">Parallax</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 6 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card yellow" data-module="mod-06b" data-exercises="5">
+            <div class="module-number">MOODUL 06b</div>
+            <h4>TypeScript Mängude Jaoks</h4>
+            <p>Konverteeri JS → TS. Tüübid, interface'id, enum'id, generics — turvalisem kood.</p>
+            <div class="module-tags">
+              <span class="tag">TypeScript</span>
+              <span class="tag">Types</span>
+              <span class="tag">Interfaces</span>
+              <span class="tag">Vite</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- ====== TASE 3 ====== -->
+      <div class="level-group">
+        <div class="level-header">
+          <div class="level-badge orange">🟠</div>
+          <div class="level-info">
+            <h3>Tase 3 — Keskmine</h3>
+            <p>Arhitektuur, CI/CD, multiplayer, protseduurne genereerimine, UI/UX.</p>
+          </div>
+        </div>
+
+        <div class="modules-grid">
+
+          <a href="#" class="module-card orange" data-module="mod-07" data-exercises="6">
+            <div class="module-number">MOODUL 07</div>
+            <h4>Mängu Arhitektuur & Mustrid</h4>
+            <p>Entity-Component-System, state machine, object pooling, observer pattern.</p>
+            <div class="module-tags">
+              <span class="tag">ECS</span>
+              <span class="tag">FSM</span>
+              <span class="tag">Patterns</span>
+              <span class="tag">Refactoring</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 6 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card orange" data-module="mod-07b" data-exercises="5">
+            <div class="module-number">MOODUL 07b</div>
+            <h4>Andmestruktuurid & Algoritmid</h4>
+            <p>QuadTree, spatial hashing, A* pathfinding — optimeeri oma mängu loogika.</p>
+            <div class="module-tags">
+              <span class="tag">QuadTree</span>
+              <span class="tag">A*</span>
+              <span class="tag">NavMesh</span>
+              <span class="tag">Algoritmid</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card orange" data-module="mod-08" data-exercises="6">
+            <div class="module-number">MOODUL 08</div>
+            <h4>CI/CD & Automaatne Deploy</h4>
+            <p>GitHub Actions, automaatne build ja deploy, testid, linting, Lighthouse.</p>
+            <div class="module-tags">
+              <span class="tag">GitHub Actions</span>
+              <span class="tag">ESLint</span>
+              <span class="tag">Jest</span>
+              <span class="tag">CI/CD</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 6 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card orange" data-module="mod-08b" data-exercises="5">
+            <div class="module-number">MOODUL 08b</div>
+            <h4>Mängu UI/UX Disain</h4>
+            <p>HUD, menüüd, dialoogid, seaded, juurdepääsetavus — professionaalne kasutajaliides.</p>
+            <div class="module-tags">
+              <span class="tag">HUD</span>
+              <span class="tag">Menüüd</span>
+              <span class="tag">A11y</span>
+              <span class="tag">UX</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card orange" data-module="mod-09" data-exercises="6">
+            <div class="module-number">MOODUL 09</div>
+            <h4>Multiplayer & Võrgumäng</h4>
+            <p>WebSocket, Socket.io, server-authoritative movement, lag compensation, lobby.</p>
+            <div class="module-tags">
+              <span class="tag">Socket.io</span>
+              <span class="tag">WebSocket</span>
+              <span class="tag">Node.js</span>
+              <span class="tag">Multiplayer</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 6 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card orange" data-module="mod-09b" data-exercises="5">
+            <div class="module-number">MOODUL 09b</div>
+            <h4>Protseduurne Genereerimine</h4>
+            <p>Perlin noise, BSP dungeonid, Wave Function Collapse, seed-põhine maailm.</p>
+            <div class="module-tags">
+              <span class="tag">Perlin</span>
+              <span class="tag">BSP</span>
+              <span class="tag">WFC</span>
+              <span class="tag">Procedural</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- ====== TASE 4 ====== -->
+      <div class="level-group">
+        <div class="level-header">
+          <div class="level-badge red">🔴</div>
+          <div class="level-info">
+            <h3>Tase 4 — Edasijõudnud</h3>
+            <p>3D-le üleminek. Three.js, Babylon.js, shaderid, 3D mudelid.</p>
+          </div>
+        </div>
+
+        <div class="modules-grid">
+
+          <a href="#" class="module-card red" data-module="mod-10" data-exercises="7">
+            <div class="module-number">MOODUL 10</div>
+            <h4>3D Põhialused — Three.js</h4>
+            <p>3D stseen, valgustus, kaamera, materjalid, mudelid, raycasting — esimesed sammud 3D maailmas.</p>
+            <div class="module-tags">
+              <span class="tag">Three.js</span>
+              <span class="tag">3D</span>
+              <span class="tag">Valgustus</span>
+              <span class="tag">glTF</span>
+              <span class="tag">Raycasting</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 7 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card red" data-module="mod-10b" data-exercises="5">
+            <div class="module-number">MOODUL 10b</div>
+            <h4>Shaderid & Visuaalefektid</h4>
+            <p>GLSL shaderid, post-processing, bloom, fog, vee- ja tule-efektid.</p>
+            <div class="module-tags">
+              <span class="tag">GLSL</span>
+              <span class="tag">Shaders</span>
+              <span class="tag">Bloom</span>
+              <span class="tag">Post-FX</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card red" data-module="mod-11" data-exercises="7">
+            <div class="module-number">MOODUL 11</div>
+            <h4>3D Mängumootor — Jätkukursus</h4>
+            <p>FPS/TPS mäng — maastik, 3D füüsika, vaenlased, relvad, päeva/öö tsükkel.</p>
+            <div class="module-tags">
+              <span class="tag">Cannon.js</span>
+              <span class="tag">FPS</span>
+              <span class="tag">Terrain</span>
+              <span class="tag">Skybox</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 7 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card red" data-module="mod-11b" data-exercises="5">
+            <div class="module-number">MOODUL 11b</div>
+            <h4>3D Mudelid & Animatsioonid</h4>
+            <p>Blender → Three.js pipeline. Skelett-animatsioonid, animation blending, morph targets.</p>
+            <div class="module-tags">
+              <span class="tag">Blender</span>
+              <span class="tag">Animation</span>
+              <span class="tag">Skeleton</span>
+              <span class="tag">Rigging</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- ====== TASE 5 ====== -->
+      <div class="level-group">
+        <div class="level-header">
+          <div class="level-badge purple">🟣</div>
+          <div class="level-info">
+            <h3>Tase 5 — Spetsialist</h3>
+            <p>AI integratsioon, optimeerimine, turvalisus, publitseerimine.</p>
+          </div>
+        </div>
+
+        <div class="modules-grid">
+
+          <a href="#" class="module-card purple" data-module="mod-12" data-exercises="6">
+            <div class="module-number">MOODUL 12</div>
+            <h4>AI Integratsioon Mängudes</h4>
+            <p>NPC käitumine, FSM, Behavior Trees, A* pathfinding, flocking, reinforcement learning.</p>
+            <div class="module-tags">
+              <span class="tag">FSM</span>
+              <span class="tag">Behavior Tree</span>
+              <span class="tag">A*</span>
+              <span class="tag">TensorFlow.js</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 6 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card purple" data-module="mod-13" data-exercises="6">
+            <div class="module-number">MOODUL 13</div>
+            <h4>AI-toega Arendus</h4>
+            <p>GitHub Copilot, prompt engineering, AI-ga refaktorimine, AI genereeritud graafika.</p>
+            <div class="module-tags">
+              <span class="tag">Copilot</span>
+              <span class="tag">ChatGPT</span>
+              <span class="tag">DALL-E</span>
+              <span class="tag">Prompt Eng.</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 6 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card purple" data-module="mod-14" data-exercises="7">
+            <div class="module-number">MOODUL 14</div>
+            <h4>Optimeerimine & Jõudlus</h4>
+            <p>Profileerimine, memory leaks, texture atlased, Web Workers, WebAssembly.</p>
+            <div class="module-tags">
+              <span class="tag">DevTools</span>
+              <span class="tag">Web Worker</span>
+              <span class="tag">WASM</span>
+              <span class="tag">Performance</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 7 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card purple" data-module="mod-14b" data-exercises="5">
+            <div class="module-number">MOODUL 14b</div>
+            <h4>Turvalisus & Anti-Cheat</h4>
+            <p>Server authority, input validation, rate limiting, anti-tamper — kaitse petturite eest.</p>
+            <div class="module-tags">
+              <span class="tag">Security</span>
+              <span class="tag">Anti-cheat</span>
+              <span class="tag">Validation</span>
+              <span class="tag">Server</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 5 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+          <a href="#" class="module-card purple" data-module="mod-15" data-exercises="7">
+            <div class="module-number">MOODUL 15</div>
+            <h4>Publitseerimine & Portfoolio</h4>
+            <p>PWA, SEO, itch.io deploy, analytics, portfoolio veebileht, postmortem.</p>
+            <div class="module-tags">
+              <span class="tag">PWA</span>
+              <span class="tag">itch.io</span>
+              <span class="tag">SEO</span>
+              <span class="tag">Analytics</span>
+              <span class="tag">Portfolio</span>
+            </div>
+            <div class="module-footer">
+              <span class="exercise-count">📝 7 harjutust</span>
+              <span class="module-status not-started">Alustamata</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== Tech Stack ===== -->
+  <section id="roadmap" style="padding: var(--space-2xl) 0; background: var(--bg-secondary);">
+    <div class="container">
+      <div class="section-header">
+        <h2>🛠️ Tehnoloogiad</h2>
+        <p>Kaasaegsed tööriistad mida kogu teekonna vältel kasutad.</p>
+      </div>
+
+      <div class="modules-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-md);">
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">💻 Keeled</h4>
+          <p style="font-size: 0.8rem;">JavaScript, TypeScript, GLSL, HTML/CSS</p>
+        </div>
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">🎨 2D Mootorid</h4>
+          <p style="font-size: 0.8rem;">Canvas API, Phaser.js</p>
+        </div>
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">🧊 3D Mootorid</h4>
+          <p style="font-size: 0.8rem;">Three.js, Babylon.js, Cannon.js</p>
+        </div>
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">🔀 Versioonihaldus</h4>
+          <p style="font-size: 0.8rem;">Git, GitHub, GitHub Flow</p>
+        </div>
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">🚀 CI/CD</h4>
+          <p style="font-size: 0.8rem;">GitHub Actions, GitHub Pages</p>
+        </div>
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">🤖 AI</h4>
+          <p style="font-size: 0.8rem;">Copilot, TensorFlow.js, DALL-E</p>
+        </div>
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">🎵 Graafika & Heli</h4>
+          <p style="font-size: 0.8rem;">Piskel, Tiled, Blender, Howler.js</p>
+        </div>
+        <div class="module-card" style="padding: var(--space-lg); cursor: default;">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-xs);">🧪 Testimine</h4>
+          <p style="font-size: 0.8rem;">Jest, Playwright, ESLint, Prettier</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p>
+        <div class="footer-links">
+          <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+          <a href="idee.html">Idee</a>
+          <a href="#">Tagasi üles ↑</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

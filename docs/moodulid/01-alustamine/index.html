@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Moodul 01 — Seadista arenduskeskkond: VS Code, Node.js, Git, GitHub.">
+  <title>Moodul 01 · Arenduskeskkonna Seadistamine — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo">
+        <span class="logo-icon">🎮</span>
+        <span>GameDev.ee</span>
+      </a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="module-page">
+    <div class="container">
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>01 · Arenduskeskkond</span>
+      </nav>
+
+      <!-- Module Hero -->
+      <div class="module-hero">
+        <div class="module-number" style="font-size: 0.85rem;">MOODUL 01 · TASE 1 — ALGAJA</div>
+        <h1>🛠️ Arenduskeskkonna Seadistamine</h1>
+        <p class="module-subtitle">
+          Paigalda kõik vajalikud tööriistad, seadista Git ja GitHub, loo oma esimene repo ja tee esimene commit.
+          See on su esimene samm mängude loomise teekonnal!
+        </p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~2 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🟢 Algaja</span>
+        </div>
+      </div>
+
+      <!-- Mida Õpid -->
+      <section class="content-section">
+        <h2>🎯 Mida Sa Õpid</h2>
+        <p>Selle mooduli lõpuks oskad:</p>
+        <ul style="list-style: none; padding: 0;">
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Paigaldada ja seadistada VS Code professionaalselt</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Kasutada terminali põhikäske</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Hallata koodi versioonihaldusega (Git)</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Luua GitHub repo ja pushida oma koodi üles</li>
+          <li style="padding: 0.5rem 0; color: var(--text-secondary);">✅ Kasutada SSH võtmeid turvaliseks ühenduseks</li>
+        </ul>
+      </section>
+
+      <!-- Samm 1 -->
+      <section class="content-section">
+        <h2>📦 Samm 1 — VS Code Paigaldamine</h2>
+        <p>
+          Visual Studio Code on tasuta, kerge ja võimas koodieditor. See on mängude arendajate seas
+          üks populaarsemaid valikuid tänu oma laienduste ökosüsteemile.
+        </p>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div>
+            <p><strong>Miks VS Code?</strong> See on tasuta, avatud lähtekoodiga, toetab sadu programmeerimiskeeli
+            ja sellel on tuhandeid laiendusi mis teevad arendamise kiiremaks.</p>
+          </div>
+        </div>
+
+        <h3>1.1 Lae alla ja paigalda</h3>
+        <p>Mine <a href="https://code.visualstudio.com" target="_blank" rel="noopener">code.visualstudio.com</a> ja lae alla oma operatsioonisüsteemi versioon.</p>
+
+        <h3>1.2 Vajalikud laiendused</h3>
+        <p>Ava VS Code, vajuta <code>Ctrl+Shift+X</code> ja paigalda need laiendused:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">VS Code Extensions</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>1. ESLint              — Koodi kvaliteedi kontroll
+2. Prettier            — Automaatne koodivormindus
+3. GitLens             — Git info otse koodis
+4. Live Server         — Lokaalne arendusserver
+5. Estonian Lang Pack   — Eestikeelne liides (valikuline)</code></pre>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>
+            <p><strong>Pro tip:</strong> Vajuta <code>Ctrl+Shift+P</code> ja kirjuta "Settings Sync" —
+            nii salvestuvad su seaded pilve ja saad need igal arvutil taastada.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Samm 2 -->
+      <section class="content-section">
+        <h2>⬇️ Samm 2 — Node.js Paigaldamine</h2>
+        <p>
+          Node.js on JavaScript runtime, mis laseb JavaScripti käivitada väljaspool brauserit.
+          Seda läheb vaja paljude tööriistade jaoks (Vite, npm paketid jne).
+        </p>
+
+        <h3>2.1 Paigaldamine</h3>
+        <p>Mine <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> ja lae alla <strong>LTS versioon</strong> (Long Term Support).</p>
+
+        <h3>2.2 Kontrolli paigaldust</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>node --version
+# Peaks näitama: v22.x.x
+
+npm --version
+# Peaks näitama: 10.x.x</code></pre>
+        </div>
+      </section>
+
+      <!-- Samm 3 -->
+      <section class="content-section">
+        <h2>🔀 Samm 3 — Git Paigaldamine ja Seadistamine</h2>
+        <p>
+          Git on versioonihaldussüsteem, mis jälgib koodi muudatusi. See on <strong>absoluutselt hädavajalik</strong>
+          igale arendajale.
+        </p>
+
+        <h3>3.1 Paigaldamine</h3>
+        <p>Mine <a href="https://git-scm.com" target="_blank" rel="noopener">git-scm.com</a> ja paigalda. Windowsis vali paigaldamisel "Git Bash" komponent.</p>
+
+        <h3>3.2 Seadistamine</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code># Seadista oma nimi ja email (ilmuvad commitides)
+git config --global user.name "Sinu Nimi"
+git config --global user.email "sinu@email.com"
+
+# Seadista vaikimisi branch nimeks "main"
+git config --global init.defaultBranch main
+
+# Kontrolli seadistust
+git config --list</code></pre>
+        </div>
+
+        <h3>3.3 SSH Võtme Loomine</h3>
+        <p>SSH võti laseb sul GitHubiga turvaliselt suhelda ilma iga kord parooli sisestamata.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code># Genereeri uus SSH võti
+ssh-keygen -t ed25519 -C "sinu@email.com"
+
+# Vajuta Enter (vaikimisi asukoht)
+# Sisesta parool (valikuline, aga soovituslik)
+
+# Kopeeri avalik võti
+# Windows:
+type %USERPROFILE%\.ssh\id_ed25519.pub | clip
+
+# Mac/Linux:
+cat ~/.ssh/id_ed25519.pub | pbcopy</code></pre>
+        </div>
+
+        <p>Mine <a href="https://github.com/settings/keys" target="_blank" rel="noopener">GitHub → Settings → SSH Keys</a>, vajuta "New SSH Key" ja kleebi võti sisse.</p>
+
+        <h3>3.4 Testi Ühendust</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code>ssh -T git@github.com
+# Peaks vastama: "Hi username! You've successfully authenticated..."</code></pre>
+        </div>
+      </section>
+
+      <!-- Samm 4 -->
+      <section class="content-section">
+        <h2>🚀 Samm 4 — Esimene Repo ja Commit</h2>
+        <p>Nüüd loome su esimese Git repositooriumi ja teeme esimesed commitid!</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Terminal</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code># Loo uus kaust oma projektile
+mkdir minu-esimene-mang
+cd minu-esimene-mang
+
+# Initsialiseeri Git repo
+git init
+
+# Loo esimene fail
+echo "# Minu Esimene Mäng" > README.md
+
+# Vaata olekut
+git status
+
+# Lisa fail staging alasse
+git add README.md
+
+# Tee esimene commit
+git commit -m "feat: lisa README.md"
+
+# Loo GitHub repo (kasutades gh CLI)
+gh repo create minu-esimene-mang --public --source=. --push
+
+# Või manuaalselt:
+# 1. Loo repo GitHubis
+# 2. git remote add origin git@github.com:SINU_NIMI/minu-esimene-mang.git
+# 3. git push -u origin main</code></pre>
+        </div>
+
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div>
+            <p><strong>Oluline:</strong> Commit sõnumid peavad olema kirjeldavad! Kasuta formaati:
+            <code>tüüp: kirjeldus</code>. Näiteks: <code>feat: lisa mängija liikumine</code>,
+            <code>fix: paranda collision bug</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Samm 5 -->
+      <section class="content-section">
+        <h2>📄 Samm 5 — .gitignore Seadistamine</h2>
+        <p>
+          <code>.gitignore</code> fail ütleb Gitile, milliseid faile <strong>mitte</strong> jälgida.
+          See hoiab su repo puhtana.
+        </p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">.gitignore</span>
+            <button class="code-copy">Kopeeri</button>
+          </div>
+          <pre><code># Sõltuvused
+node_modules/
+
+# Build
+dist/
+build/
+
+# OS failid
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+*.swp
+
+# Keskkonnamuutujad
+.env
+.env.local</code></pre>
+        </div>
+      </section>
+
+      <!-- Harjutused -->
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <p>Tee kõik 5 harjutust. Märgi linnukesega kui oled valmis!</p>
+
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-01" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Paigalda VS Code ja 5 laiendust</h4>
+              <p>Paigalda VS Code ja seadista ESLint, Prettier, GitLens, Live Server ja Estonian Language Pack. Tee screenshot oma Extensions vaatest.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-01" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Loo GitHub konto ja SSH võti</h4>
+              <p>Loo GitHub konto, genereeri SSH võti, lisa see GitHubi ja testi ühendust käsuga <code>ssh -T git@github.com</code>.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-01" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Loo repo ja tee 3 commiti</h4>
+              <p>Loo uus kaust, initsialiseeri repo, lisa 3 erinevat faili (README.md, index.html, style.css) ja tee iga faili jaoks eraldi commit kirjeldava sõnumiga.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-01" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Push GitHubi</h4>
+              <p>Loo GitHub repo, ühenda remote ja pushi oma kood üles. Kontrolli et failid on GitHubis nähtavad.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-01" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Muuda GitHubis ja pull alla</h4>
+              <p>Muuda README.md faili otse GitHubi veebis, siis tõmba muudatus oma arvutisse käsuga <code>git pull</code>. Vaata logi käsuga <code>git log --oneline</code>.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Navigation -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-2xl); padding-top: var(--space-xl); border-top: 1px solid var(--border-color);">
+        <a href="../../index.html" class="btn btn-secondary">← Tagasi avalehele</a>
+        <a href="../02-canvas-pohialused/index.html" class="btn btn-primary">Järgmine: Canvas & JS →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p>
+        <div class="footer-links">
+          <a href="../../index.html">Avaleht</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>
