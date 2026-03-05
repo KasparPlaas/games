@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Moodul 03b — Mängu matemaatika: vektorid, trigonomeetria, lerp, partiklid.">
+  <title>Moodul 03b · Mängu Matemaatika — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>03b · Mängu Matemaatika</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size: 0.85rem;">MOODUL 03b · TASE 1 — ALGAJA</div>
+        <h1>📐 Mängu Matemaatika Põhialused</h1>
+        <p class="module-subtitle">Vektorid, trigonomeetria ja lineaarne interpolatsioon — matemaatika mis mänge ellu äratab. Ilma selleta ei saa ükski mäng hakkama!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~3-4 tundi</span>
+          <span class="meta-item">📝 8 harjutust</span>
+          <span class="meta-item">🟢 Algaja</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>📋 Eeldused</h2>
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><p>Peaksid olema läbinud <a href="../03-esimene-mang/index.html">Moodul 03</a>. Pead tundma Canvas API-t ja game loop'i.</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎯 Mida Sa Õpid</h2>
+        <ul style="list-style:none;padding:0;">
+          <li style="padding:0.4rem 0;color:var(--text-secondary);">✅ 2D vektorite matemaatika (liitmine, lahutamine, pikkus, normaliseerimine)</li>
+          <li style="padding:0.4rem 0;color:var(--text-secondary);">✅ Trigonomeetria mängudes (sin, cos, atan2, ringliikumine)</li>
+          <li style="padding:0.4rem 0;color:var(--text-secondary);">✅ Kauguse ja nurga arvutamine kahe punkti vahel</li>
+          <li style="padding:0.4rem 0;color:var(--text-secondary);">✅ Lineaarne interpolatsioon (lerp) sujuvaks liikumiseks</li>
+          <li style="padding:0.4rem 0;color:var(--text-secondary);">✅ Partiklisüsteemi ehitamine</li>
+          <li style="padding:0.4rem 0;color:var(--text-secondary);">✅ Skalaarkorrutis (dot product) ja selle kasutused</li>
+        </ul>
+      </section>
+
+      <section class="content-section">
+        <h2>📦 Samm 1 — Vector2D Klass</h2>
+        <p>Vektor on matemaatiline objekt millel on <strong>suund</strong> ja <strong>pikkus</strong>. Mängudes kasutame vektoreid positsiooni, kiiruse ja jõudude esitamiseks.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">vector2d.js</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class Vector2D {
+  constructor(x = 0, y = 0) {
+    this.x = x;
+    this.y = y;
+  }
+
+  // Liida teine vektor
+  add(v) {
+    return new Vector2D(this.x + v.x, this.y + v.y);
+  }
+
+  // Lahuta teine vektor
+  subtract(v) {
+    return new Vector2D(this.x - v.x, this.y - v.y);
+  }
+
+  // Korruta skalariga
+  multiply(scalar) {
+    return new Vector2D(this.x * scalar, this.y * scalar);
+  }
+
+  // Vektori pikkus (magnitude)
+  get magnitude() {
+    return Math.sqrt(this.x * this.x + this.y * this.y);
+  }
+
+  // Normaliseeri (pikkus = 1, suund säilib)
+  normalize() {
+    const mag = this.magnitude;
+    if (mag === 0) return new Vector2D(0, 0);
+    return new Vector2D(this.x / mag, this.y / mag);
+  }
+
+  // Skalaarkorrutis (dot product)
+  dot(v) {
+    return this.x * v.x + this.y * v.y;
+  }
+
+  // Nurk radiaanides
+  get angle() {
+    return Math.atan2(this.y, this.x);
+  }
+
+  // Kaugus teise vektorini
+  distanceTo(v) {
+    return this.subtract(v).magnitude;
+  }
+
+  // Lineaarne interpolatsioon
+  static lerp(a, b, t) {
+    return new Vector2D(
+      a.x + (b.x - a.x) * t,
+      a.y + (b.y - a.y) * t
+    );
+  }
+
+  // Loo vektorist nurgast ja pikkusest
+  static fromAngle(angle, length = 1) {
+    return new Vector2D(
+      Math.cos(angle) * length,
+      Math.sin(angle) * length
+    );
+  }
+}</code></pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><p><strong>Miks vektorid?</strong> Ilma vektoriteta peaksid x ja y koordinaate alati eraldi käsitlema. Vektoritega saad kirjutada <code>position = position.add(velocity)</code> — puhas ja loetav!</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🔄 Samm 2 — Trigonomeetria Mängudes</h2>
+        <p><code>sin()</code> ja <code>cos()</code> on sinu parimad sõbrad ringikujuliste ja laineliste liikumiste jaoks.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">main.js — Ringliikumine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const center = { x: canvas.width / 2, y: canvas.height / 2 };
+
+let angle = 0;
+const radius = 150;
+const orbitSpeed = 0.02;
+
+// Mitu orbiidil olevat objekti
+const orbiters = [
+  { offset: 0, color: '#22c55e', size: 12 },
+  { offset: Math.PI * 0.66, color: '#3b82f6', size: 10 },
+  { offset: Math.PI * 1.33, color: '#ef4444', size: 8 },
+];
+
+function update() {
+  angle += orbitSpeed;
+}
+
+function draw() {
+  ctx.fillStyle = 'rgba(15, 15, 35, 0.1)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Keskpunkt
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#eab308';
+  ctx.fill();
+
+  // Orbiteerivad objektid
+  orbiters.forEach(orb => {
+    const a = angle + orb.offset;
+    const x = center.x + Math.cos(a) * radius;
+    const y = center.y + Math.sin(a) * radius;
+
+    ctx.beginPath();
+    ctx.arc(x, y, orb.size, 0, Math.PI * 2);
+    ctx.fillStyle = orb.color;
+    ctx.fill();
+  });
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎯 Samm 3 — Objekti Suunamine Hiire Poole</h2>
+        <p>Kasutame <code>Math.atan2()</code> et leida nurk kahe punkti vahel ja liigutame objekti selles suunas.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">main.js — Suunamine vektoritega</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>const player = { pos: new Vector2D(400, 300), speed: 3 };
+const mouse = new Vector2D(400, 300);
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+});
+
+function update() {
+  // Suund mängijast hiireni
+  const direction = mouse.subtract(player.pos).normalize();
+
+  // Kaugus hiireni
+  const distance = player.pos.distanceTo(mouse);
+
+  // Liiguta ainult kui piisavalt kaugel
+  if (distance > 5) {
+    player.pos = player.pos.add(direction.multiply(player.speed));
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Mängija
+  ctx.beginPath();
+  ctx.arc(player.pos.x, player.pos.y, 15, 0, Math.PI * 2);
+  ctx.fillStyle = '#22c55e';
+  ctx.fill();
+
+  // Joon hiireni (suuna näitamine)
+  ctx.beginPath();
+  ctx.moveTo(player.pos.x, player.pos.y);
+  ctx.lineTo(mouse.x, mouse.y);
+  ctx.strokeStyle = 'rgba(34, 197, 94, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>💥 Samm 4 — Partiklisüsteem</h2>
+        <p>Partiklid on väikesed objektid mis tekivad, liiguvad ja kaovad. Kasutatakse plahvatuste, suitsu, tule ja muu jaoks.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">particles.js</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class Particle {
+  constructor(x, y) {
+    this.pos = new Vector2D(x, y);
+    // Juhuslik suund ja kiirus
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 4;
+    this.vel = Vector2D.fromAngle(angle, speed);
+    this.life = 1.0;          // 1.0 = täis, 0.0 = surnud
+    this.decay = 0.01 + Math.random() * 0.03;
+    this.size = 2 + Math.random() * 4;
+    this.color = `hsl(${Math.random() * 60 + 10}, 100%, 60%)`;
+  }
+
+  update() {
+    this.pos = this.pos.add(this.vel);
+    this.vel = this.vel.multiply(0.98); // Hõõrdumine
+    this.life -= this.decay;
+  }
+
+  draw(ctx) {
+    ctx.globalAlpha = this.life;
+    ctx.beginPath();
+    ctx.arc(this.pos.x, this.pos.y, this.size * this.life, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  get isDead() {
+    return this.life <= 0;
+  }
+}
+
+// Partiklite haldur
+const particles = [];
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  // Loo 80 partiklit plahvatusena
+  for (let i = 0; i < 80; i++) {
+    particles.push(new Particle(x, y));
+  }
+});
+
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    if (particles[i].isDead) {
+      particles.splice(i, 1);
+    }
+  }
+}
+
+function drawParticles() {
+  particles.forEach(p => p.draw(ctx));
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📏 Samm 5 — Lerp ja Sujuv Kaamera</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">camera.js — Sujuv kaamera</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class Camera {
+  constructor(x, y) {
+    this.pos = new Vector2D(x, y);
+    this.target = new Vector2D(x, y);
+    this.smoothing = 0.08; // 0.01 = väga aeglane, 0.5 = kiire
+  }
+
+  follow(targetPos) {
+    this.target = targetPos;
+  }
+
+  update() {
+    // Lerp kaamera positsiooni sihtmärgi poole
+    this.pos = Vector2D.lerp(this.pos, this.target, this.smoothing);
+  }
+
+  apply(ctx) {
+    // Nihuta kogu Canvas et kaamera oleks keskmes
+    ctx.translate(
+      -this.pos.x + canvas.width / 2,
+      -this.pos.y + canvas.height / 2
+    );
+  }
+
+  restore(ctx) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+}
+
+// Kasutamine:
+// const camera = new Camera(player.pos.x, player.pos.y);
+// camera.follow(player.pos);
+// camera.update();
+// camera.apply(ctx);
+// ... joonista mängumaailm ...
+// camera.restore(ctx);</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Implementeeri Vector2D klass</h4>
+              <p>Kirjuta Vector2D klass kõigi meetoditega (add, subtract, multiply, normalize, magnitude, dot, angle, distanceTo, lerp, fromAngle). Testi iga meetodit konsoolis.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Hiire poole liikuv objekt</h4>
+              <p>Loo ring mis liigub pidevalt hiire suunas kasutades vektoreid. Kuva ekraanil: kaugus hiireni, suunavektor, kiirus.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Orbiteerivad planeedid</h4>
+              <p>Loo "päikesesüsteem" — keskne objekt + 5 erineva kiirusega orbiteerivat objekti kasutades <code>sin()</code> ja <code>cos()</code>. Lisa igale objektile erinev orbiidi raadius.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Laineline liikumine</h4>
+              <p>Loo rida 20 ringi mis liiguvad laineliselt kasutades <code>sin()</code>. Iga ring on veidi nihkes — tekib laineefekt. Katse amplituudi ja sageduse muutmist.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Partiklisüsteemi plahvatus</h4>
+              <p>Ehita partiklisüsteem — hiire klikkimisel tekib 100 osakest juhuslike suundade ja kiirustega. Lisa gravitatsioon (osakesed kukuvad alla) ja hõõrdumine.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Lerp funktsioon ja sujuv liikumine</h4>
+              <p>Implementeeri lerp ja loo 3 objekti mis jälgivad hiirt erinevate sujuvusfaktoritega (0.02, 0.1, 0.3). Visualiseeri erinevus.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="6" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Sujuv kaamera jälgimine</h4>
+              <p>Loo suur mängumaailm (2000x2000) ja väike Canvas. Mängija liigub WASD-ga, kaamera jälgib lerp-iga. Lisa taustale grid et liikumist näha.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-03b" data-index="7" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Dot product — vaateväli</h4>
+              <p>Loo vaenlane kellel on vaatesuund. Kasuta dot product'i et kontrollida kas mängija on vaenlase vaateväljas (90° koonus). Visualiseeri vaateväli.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../03-esimene-mang/index.html" class="btn btn-secondary">← Moodul 03</a>
+        <a href="../04-git-syvitsi/index.html" class="btn btn-primary">Moodul 04: Git Süvitsi →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

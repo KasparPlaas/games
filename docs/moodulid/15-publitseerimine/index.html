@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 15 · Publitseerimine — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>15 · Publitseerimine</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 15 · TASE 5 — SPETSIALIST</div>
+        <h1>🚀 Mängu Publitseerimine ja Turundus</h1>
+        <p class="module-subtitle">itch.io, Steam, Electron/Tauri, turundus, monetiseerimine, portfoolio — vii oma mäng maailma!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~8-10 tundi</span>
+          <span class="meta-item">📝 7 harjutust</span>
+          <span class="meta-item">🟣 Spetsialist</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🎮 Samm 1 — itch.io Avaldamine</h2>
+        <div class="callout callout-tip">
+          <strong>💡 Miks alustada itch.io-ga?</strong>
+          <p>Tasuta, lihtne, indie-sõbralik. Toetab HTML5 mänge otse brauseris. Ideaalne esimene platvorm!</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">itch.io samm-sammult</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># 1. LOO KONTO: https://itch.io/register
+
+# 2. LOO PROJEKT: Dashboard → Create new project
+#    - Title: Sinu mängu nimi
+#    - Project URL: sinu-mang
+#    - Kind of project: HTML
+#    - Pricing: Free / Donation / Paid
+#    - Uploads: .zip fail (index.html peab olema juurkaustas!)
+
+# 3. BUILD MÄNG (Vite):
+npm run build  # → dist/ kausta
+
+# 4. ZIP mängu failid:
+#    Windowsis: Vali kõik dist/ sees → Parem klikk → "Send to → Compressed"
+#    Terminalis:
+cd dist
+Compress-Archive -Path * -DestinationPath ../game.zip
+
+# 5. LAADI ÜLES itch.io-sse:
+#    - Upload: game.zip
+#    - ✅ "This file will be played in the browser"
+#    - Viewport: 800x600 (või sinu mängu suurus)
+#    - ✅ SharedArrayBuffer support (kui kasutad Workers)
+#    - ✅ Fullscreen button
+
+# 6. LEHT:
+#    - Cover image: 630x500px (mängu screenshot)
+#    - Screenshots: min 3 ekraanipilti
+#    - Description: Markdown kirjeldus
+#    - Tags: html5, javascript, 2d, platformer jne</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">butler — itch.io CLI tööriist</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Butler automatiseerib itch.io üleslaadimist
+# Install: https://itch.io/docs/butler/installing.html
+
+# Login:
+butler login
+
+# Push (automaatne versioonihaldus!):
+butler push dist/ kaspar/minu-mang:html5
+
+# Versioonid:
+butler status kaspar/minu-mang
+
+# CI/CD-s (GitHub Actions):
+# - name: Deploy to itch.io
+#   uses: manleydev/butler-publish-itchio-action@master
+#   env:
+#     BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
+#     CHANNEL: html5
+#     ITCH_GAME: kaspar/minu-mang
+#     PACKAGE: dist/</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🖥️ Samm 2 — Desktop Mäng (Electron / Tauri)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Tauri — Kerge desktop wrapper</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Tauri on ~10x väiksem kui Electron (kasutab OS WebView'd)
+# Install:
+npm create tauri-app@latest my-game -- --template vanilla-ts
+
+# Struktuur:
+# my-game/
+#   src/          ← Sinu mängu kood (HTML/JS/CSS)
+#   src-tauri/    ← Rust backend
+#     tauri.conf.json  ← Seaded
+
+# tauri.conf.json olulised seaded:
+{
+  "productName": "Minu Mäng",
+  "version": "1.0.0",
+  "build": {
+    "distDir": "../dist"
+  },
+  "app": {
+    "windows": [{
+      "title": "Minu Mäng",
+      "width": 1280,
+      "height": 720,
+      "resizable": true,
+      "fullscreen": false
+    }]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis", "deb", "appimage"],
+    "icon": ["icons/icon.png"]
+  }
+}
+
+# Dev:
+npm run tauri dev
+
+# Build (Windows .msi + .exe):
+npm run tauri build
+# → src-tauri/target/release/bundle/</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏪 Samm 3 — Steam Avaldamine</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Steam samm-sammult</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># STEAM AVALDAMISE TEEKOND:
+
+# 1. ETTEVALMISTUS
+#    - Steami arendajakonto: $100 ühekordne tasu
+#    - https://partner.steamgames.com/
+#    - Loo "App" → sead nime, kirjelduse, pildi
+
+# 2. NÕUDED
+#    - Store page: min 5 screenshots (1920x1080)
+#    - Capsule art: 460x215, 231x87, 616x353
+#    - Trailer: 1080p video (Steam valmistab ka thumbnail)
+#    - Kirjeldus: lühike + pikk + süsteeminõuded
+#    - GDPR/CCPA nõuetele vastav privaatsuspoliitika
+
+# 3. STEAMWORKS SDK (valikuline HTML5 mängudel)
+#    - Saavutused (Achievements)
+#    - Leaderboard'id
+#    - Cloud saves
+#    - Workshop (modid)
+
+# 4. EHITAMINE STEAMI JAOKS
+#    Tauri/Electron → .exe → Steam depot upload
+#    Steamworks CLI: steamcmd
+#    
+#    Depotid:
+#    - Windows: game_win_x64 → .exe
+#    - Mac: game_mac → .app  
+#    - Linux: game_linux → AppImage
+
+# 5. HIND JA LAUNCH
+#    - Hinnasoovitus sõltub sisuklähalt
+#    - Coming Soon leht → wishlists koguvad
+#    - Launch: vali reede-kolmapäev (mitte nädalavahetust!)
+#    - Esimene nädal on kriitiline (Steam algoritm)</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📢 Samm 4 — Turundus ja Kogukond</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Turundusplaan</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># INDIE MÄNGU TURUNDUSPLAAN
+
+# ===== ENNE LAUNCHI (3-6 kuud) =====
+# 1. Landing page / Coming Soon
+#    - Emaili kogumisleht (Mailchimp / ConvertKit)
+#    - "Wishlist on Steam" nupp
+#
+# 2. Sotsiaalmeedia
+#    - Twitter/X: #screenshotsaturday, #indiedev, #gamedev
+#    - Reddit: r/indiegaming, r/gamedev, r/playmygame
+#    - TikTok: lühikesed devlog videod
+#    - YouTube: devlog sari
+#
+# 3. Demo / Playtesting
+#    - Steam Next Fest (demo festival)
+#    - itch.io demo
+#    - Beta-testijate grupp (Discord)
+#
+# 4. Presskit
+#    - https://dopresskit.com/
+#    - Screenshots, logo, trailer, kirjeldus, kontakt
+#    - Saada emailiteavitus YouTuberitele ja ajakirjanikele
+
+# ===== LAUNCH DAY =====
+# - Postita kõigile platvormidele
+# - Reddit: r/gaming, r/indiegaming
+# - Hacker News: Show HN
+# - Product Hunt
+# - Discord serverid
+# - Saada press release
+
+# ===== PÄRAST LAUNCHI =====
+# - Vasta kõigile kommentaaridele / arvustustele
+# - Bugifixid esimesel nädalal!
+# - Content update'id iga 2-4 nädalat
+# - Sooduspakkumised Steam müügipäevadel</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>💼 Samm 5 — Arendaja Portfoolio</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">portfolio.md — Portfoolio struktuur</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># MÄNGUARENDAJA PORTFOOLIO:
+
+# 1. GITHUB PROFIIL (README.md)
+#    - Bio: "Game developer | TypeScript | Three.js"
+#    - Pinned repos: parimad mänguprojektid
+#    - Contribution graph (roheline!)
+#    - README.md koos piltide ja linkidega
+
+# 2. PORTFOOLIO VEEBILEHT
+#    - Hero: nimi + amet + lühikirjeldus
+#    - Projektid: iga mäng eraldi kaardil
+#      → Screenshot/GIF
+#      → Tehnoloogiad (badges)
+#      → Live demo link
+#      → GitHub link
+#      → Mida õppisin
+#    - Oskused: progress bar'id (JS, TS, Three.js, Phaser)
+#    - Kontakt: email, LinkedIn, itch.io, GitHub
+
+# 3. IGA PROJEKTI JUURES:
+#    - README.md koos GIF-iga (gameplay)
+#    - Live demo (GitHub Pages)
+#    - Tehniline kirjeldus: arhitektuur, mustrid, väljakutsed
+#    - Koodikvaliteet: testid, CI/CD, linting
+
+# 4. LINKEDIN
+#    - "Game Developer" headline
+#    - Projektid Featured sektsionis
+#    - Oskused: JavaScript, TypeScript, WebGL, Game Development
+
+# NÄPUNÄITEID:
+# ✅ Kvaliteet > kvantiteet (3 head mängu > 20 poolikut)
+# ✅ GIF/video > screenshot (näita gameplay'd!)
+# ✅ Kirjelda probleeme ja lahendusi
+# ✅ Näita koodi, mitte ainult tulemust
+# ✅ Hoia GitHub aktiivne (commit'id)</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-15" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>itch.io avaldamine</h4>
+              <p>Avalda oma mäng itch.io-s: build → zip → upload. Lisa cover image, 3 screenshoti, kirjeldus. Jaga linki ja kogu tagasiside.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-15" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>butler CI/CD</h4>
+              <p>Seadista GitHub Actions: iga push main → automaatne build → butler push itch.io-sse. Lisa versiooninumber package.json-ist.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-15" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Desktop build Tauriga</h4>
+              <p>Paki oma HTML5 mäng Tauri-ga: Windows .exe + installer. Lisa ikoon, splash screen, window settings. Testi eri resolutsioonidel.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-15" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Landing page</h4>
+              <p>Loo mängu turundusleht: hero video/GIF, features, screenshots, "Wishlist/Download" CTA, press kit link. Responsive. Deploy GitHub Pages.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-15" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Presskit</h4>
+              <p>Loo presskit (dopresskit.com): mäng, arendaja, faktileht, allalaaditavad pildid, trailer link, kontaktandmed. Saada 5 YouTuberile.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-15" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Arendaja portfoolio</h4>
+              <p>Loo isiklik portfoolio: min 3 mänguprojekti GIF-idega. Oskused, lühielulugu, lingid. Deploy ja lisa GitHub profiili README-sse.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-15" data-index="6" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Game Jam osalemine</h4>
+              <p>Osale Game Jam-il (Ludum Dare, GMTK, itch.io jam): 48-72h jooksul valmis mäng. Postita: devlog + postmortem (mis läks hästi/halvasti).</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../14b-turvalisus/index.html" class="btn btn-secondary">← Moodul 14b</a>
+        <a href="../../index.html" class="btn btn-primary">🏠 Tagasi Avalehele</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

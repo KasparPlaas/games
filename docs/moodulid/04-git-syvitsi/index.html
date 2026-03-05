@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 04 · Git &amp; GitHub Süvitsi — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>04 · Git &amp; GitHub Süvitsi</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 04 · TASE 2 — EDASIJÕUDNUD</div>
+        <h1>🔀 Git &amp; GitHub Süvitsi</h1>
+        <p class="module-subtitle">Branching, merging, konfliktide lahendamine, Pull Request'id ja meeskonnatöö — kõik mida vajad professionaalseks versioonihalduseks.</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~4-5 tundi</span>
+          <span class="meta-item">📝 6 harjutust</span>
+          <span class="meta-item">🟡 Edasijõudnud</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>📋 Eeldused</h2>
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><p>Peaksid olema läbinud <a href="../01-alustamine/index.html">Moodul 01</a> ja tundma git add/commit/push käske.</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🌿 Samm 1 — Branching Strateegia</h2>
+        <p>Harud (branches) võimaldavad paralleelselt arendust ilma põhikoodi rikkumata. Iga feature saab oma haru.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal — Harude haldus</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Loo uus feature haru ja liigu sinna
+git checkout -b feature/player-movement
+
+# Vaata kõiki harusid
+git branch -a
+
+# Liigu tagasi main harule
+git checkout main
+
+# Kustuta kohalik haru
+git branch -d feature/player-movement
+
+# Kustuta serveri haru
+git push origin --delete feature/player-movement</code></pre>
+        </div>
+
+        <h3>Professionaalne haru nimetus:</h3>
+        <table style="width:100%;border-collapse:collapse;margin:1rem 0;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border-color);">
+              <th style="text-align:left;padding:0.75rem;">Prefiks</th>
+              <th style="text-align:left;padding:0.75rem;">Kasutus</th>
+              <th style="text-align:left;padding:0.75rem;">Näide</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:0.75rem;"><code>feature/</code></td>
+              <td style="padding:0.75rem;">Uus funktsionaalsus</td>
+              <td style="padding:0.75rem;"><code>feature/inventory-system</code></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:0.75rem;"><code>fix/</code></td>
+              <td style="padding:0.75rem;">Vea parandus</td>
+              <td style="padding:0.75rem;"><code>fix/collision-bug</code></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:0.75rem;"><code>refactor/</code></td>
+              <td style="padding:0.75rem;">Koodi restruktureerimine</td>
+              <td style="padding:0.75rem;"><code>refactor/entity-system</code></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:0.75rem;"><code>hotfix/</code></td>
+              <td style="padding:0.75rem;">Kiire parandus tootmises</td>
+              <td style="padding:0.75rem;"><code>hotfix/save-crash</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="content-section">
+        <h2>🔄 Samm 2 — Merging ja Rebase</h2>
+        <p>Kaks viisi kuidas harusid kokku liita:</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal — Merge</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Merge — loob merge commit'i (säilitab ajaloo)
+git checkout main
+git merge feature/player-movement
+
+# Rebase — kirjutab ajaloo ümber (lineaarne ajalugu)
+git checkout feature/player-movement
+git rebase main
+
+# Interaktiivne rebase — commit'ide koondamine
+git rebase -i HEAD~3
+# Avanenud editoris:
+# pick abc1234 Lisa mängija liikumine
+# squash def5678 Paranda kiirus
+# squash ghi9012 Lisa animatsioon</code></pre>
+        </div>
+
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div><p><strong>Rebase reegel:</strong> Ära kunagi tee rebase'i harudele mis on juba serverisse push'itud ja mida teised kasutavad! See tekitab konflikte.</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>⚡ Samm 3 — Konfliktide Lahendamine</h2>
+        <p>Kui kaks haru muudavad sama rida, tekib <strong>merge conflict</strong>. Git märgib konflikti kohad:</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Konflikti näide — player.js</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class Player {
+  constructor() {
+<<<<<<< HEAD
+    this.speed = 5;       // main haru versioon
+=======
+    this.speed = 3;       // feature haru versioon
+>>>>>>> feature/player-balance
+    this.health = 100;
+  }
+}
+
+// Lahendus — vali õige, kustuta markerid:
+class Player {
+  constructor() {
+    this.speed = 4;       // kompromiss!
+    this.health = 100;
+  }
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal — Konflikti lahendamine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Pärast konflikti lahendamist:
+git add player.js
+git commit -m "fix: lahenda merge conflict - mängija kiirus"
+
+# Kasuta VS Code merge editor'it:
+# Ava konflikti fail → VS Code näitab "Accept Current", "Accept Incoming", "Accept Both"
+
+# Abort merge kui läheb untsu:
+git merge --abort</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🔍 Samm 4 — Pull Request'id ja Code Review</h2>
+        <p>Pull Request (PR) on professionaalse arenduse nurgakivi — kood vaadatakse üle enne main haruga liitmist.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal — PR workflow</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># 1. Loo feature haru
+git checkout -b feature/score-system
+
+# 2. Tee muudatused ja commit'id
+git add .
+git commit -m "feat: lisa punktisüsteem"
+
+# 3. Push serverisse
+git push -u origin feature/score-system
+
+# 4. Loo PR GitHub CLI-ga
+gh pr create --title "Lisa punktisüsteem" \
+  --body "## Muudatused
+  - Punktide kogumine
+  - Highscore localStorage'is
+  - Punktide kuvamine HUD-is" \
+  --base main
+
+# 5. Vaata PR-e
+gh pr list
+gh pr view 1
+
+# 6. Merge PR
+gh pr merge 1 --squash</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏷️ Samm 5 — Git Tags ja Releases</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal — Versioonid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Loo annotatsiooniga tag
+git tag -a v1.0.0 -m "Esimene versioon - põhimängu funktsioonid"
+
+# Vaata tage
+git tag -l
+
+# Push tag serverisse
+git push origin v1.0.0
+
+# Push kõik tagid
+git push origin --tags
+
+# Loo GitHub release
+gh release create v1.0.0 --title "v1.0.0 — Esimene versioon" \
+  --notes "### Uued funktsioonid
+- Mängija liikumine
+- Kokkupõrke tuvastamine
+- Punktisüsteem"</code></pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><p><strong>Semantic Versioning:</strong> MAJOR.MINOR.PATCH — v1.0.0 → v1.1.0 (uus feature) → v1.1.1 (bugfix) → v2.0.0 (breaking change).</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🔧 Samm 6 — Git Stash ja Cherry-Pick</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal — Kasulikud käsud</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Stash — peida pooleli töö ajutiselt
+git stash
+git stash push -m "pooleli inventory süsteem"
+git stash list
+git stash pop          # Taasta viimane stash
+git stash apply stash@{1}  # Taasta konkreetne stash
+
+# Cherry-pick — kopeeri üks commit teisest harust
+git cherry-pick abc1234
+
+# Git log — ilus ajalugu
+git log --oneline --graph --all
+
+# Blame — kes muutis seda rida?
+git blame player.js
+
+# Bisect — leia commit mis tekitas vea
+git bisect start
+git bisect bad          # Praegune on vigane
+git bisect good v1.0.0  # See versioon töötas
+# Git kontrollib automaatselt commit'e, ütle kas hea/halb</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📁 Samm 7 — .gitignore ja Repo Struktuur</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">.gitignore — Mänguprojekt</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Sõltuvused
+node_modules/
+package-lock.json
+
+# Build väljund
+dist/
+build/
+
+# Keskkonna muutujad
+.env
+.env.local
+
+# IDE seaded
+.vscode/settings.json
+.idea/
+
+# OS failid
+.DS_Store
+Thumbs.db
+
+# Mängu-spetsiifilised
+*.psd          # Photoshop originaalid
+*.blend        # Blender failid
+*.fbx          # Suurte 3D mudelite originaalid
+temp/
+*.log</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-04" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Feature Branch workflow</h4>
+              <p>Loo oma mänguprojektis uus <code>feature/enemy-system</code> haru. Lisa koodi, tee 3 commit'i, merge'i tag main'i ja kustuta feature haru.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-04" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Merge konflikti harjutus</h4>
+              <p>Loo tahtlikult merge conflict: muuda samas failis sama rida kahes erinevas harus. Lahenda VS Code merge editor'iga.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-04" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Pull Request GitHub'is</h4>
+              <p>Loo feature haru, push serverisse ja loo PR <code>gh</code> abil. Lisa kirjeldus, märgi PR kui draft, seejärel merge'i squash strateegiaga.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-04" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Interactive Rebase</h4>
+              <p>Tee 5 väikest commit'i ühes harus. Kasuta <code>git rebase -i</code> et koondada need 2 loogiliseks commit'iks. Kontrolli <code>git log</code>-iga tulemust.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-04" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Versioonimine ja Release</h4>
+              <p>Lisa projektile semantic versioning — loo tagid v0.1.0, v0.2.0 ja v1.0.0. Loo GitHub release iga versiooni jaoks koos release notes'iga.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-04" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Git Bisect vealeidmine</h4>
+              <p>Lisa 10 commit'i kus ühes tekib viga. Kasuta <code>git bisect</code> et leida täpselt see commit mis vea tekitas. Dokumenteeri protsess.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../03b-matemaatika/index.html" class="btn btn-secondary">← Moodul 03b</a>
+        <a href="../05-phaser/index.html" class="btn btn-primary">Moodul 05: Phaser.js →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

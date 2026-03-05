@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 09 · Multiplayer ja Networking — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>09 · Multiplayer ja Networking</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 09 · TASE 3 — KESKMINE</div>
+        <h1>🌐 Multiplayer ja Networking</h1>
+        <p class="module-subtitle">WebSocket'id, Socket.io, klient-server arhitektuur, latentsuse kompenseerimine — ehita mängud mida saab koos mängida!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~6-8 tundi</span>
+          <span class="meta-item">📝 6 harjutust</span>
+          <span class="meta-item">🟠 Keskmine</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🔌 Samm 1 — WebSocket'i Põhialused</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">server.js — WebSocket server</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import { WebSocketServer } from 'ws';
+
+const wss = new WebSocketServer({ port: 3000 });
+const players = new Map();
+
+wss.on('connection', (ws) => {
+  const playerId = crypto.randomUUID();
+  players.set(playerId, {
+    id: playerId, x: 400, y: 300, color: randomColor()
+  });
+
+  // Saada mängija oma ID
+  ws.send(JSON.stringify({
+    type: 'init',
+    id: playerId,
+    players: Object.fromEntries(players)
+  }));
+
+  // Teata teistele uuest mängijast
+  broadcast({ type: 'playerJoin', player: players.get(playerId) }, ws);
+
+  ws.on('message', (data) => {
+    const msg = JSON.parse(data);
+
+    if (msg.type === 'move') {
+      const player = players.get(playerId);
+      if (player) {
+        player.x = msg.x;
+        player.y = msg.y;
+        // Saada kõigile teistele
+        broadcast({ type: 'playerMove', id: playerId, x: msg.x, y: msg.y }, ws);
+      }
+    }
+  });
+
+  ws.on('close', () => {
+    players.delete(playerId);
+    broadcast({ type: 'playerLeave', id: playerId });
+  });
+});
+
+function broadcast(msg, exclude = null) {
+  const data = JSON.stringify(msg);
+  wss.clients.forEach(client => {
+    if (client !== exclude && client.readyState === 1) {
+      client.send(data);
+    }
+  });
+}
+
+function randomColor() {
+  return `hsl(${Math.random() * 360}, 70%, 60%)`;
+}
+
+console.log('Server käivitatud portil 3000');</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🖥️ Samm 2 — Klient</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">client.js — WebSocket klient</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const ws = new WebSocket('ws://localhost:3000');
+
+let myId = null;
+const players = new Map();
+
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+
+  switch (msg.type) {
+    case 'init':
+      myId = msg.id;
+      Object.entries(msg.players).forEach(([id, p]) => players.set(id, p));
+      break;
+
+    case 'playerJoin':
+      players.set(msg.player.id, msg.player);
+      break;
+
+    case 'playerMove':
+      const player = players.get(msg.id);
+      if (player) {
+        player.targetX = msg.x;  // Interpolatsiooni sihtmärk
+        player.targetY = msg.y;
+      }
+      break;
+
+    case 'playerLeave':
+      players.delete(msg.id);
+      break;
+  }
+};
+
+// Klaviatuur
+const keys = {};
+window.addEventListener('keydown', (e) => keys[e.key] = true);
+window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+function update() {
+  const me = players.get(myId);
+  if (!me) return;
+
+  const speed = 5;
+  let moved = false;
+
+  if (keys['w'] || keys['ArrowUp'])    { me.y -= speed; moved = true; }
+  if (keys['s'] || keys['ArrowDown'])  { me.y += speed; moved = true; }
+  if (keys['a'] || keys['ArrowLeft'])  { me.x -= speed; moved = true; }
+  if (keys['d'] || keys['ArrowRight']) { me.x += speed; moved = true; }
+
+  if (moved) {
+    ws.send(JSON.stringify({ type: 'move', x: me.x, y: me.y }));
+  }
+
+  // Interpolatsioon teiste mängijate positsioonidele
+  for (const [id, p] of players) {
+    if (id !== myId && p.targetX !== undefined) {
+      p.x += (p.targetX - p.x) * 0.2;
+      p.y += (p.targetY - p.y) * 0.2;
+    }
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (const [id, p] of players) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
+    ctx.fillStyle = p.color || '#22c55e';
+    ctx.fill();
+
+    // Oma mängija äärejoon
+    if (id === myId) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🚀 Samm 3 — Socket.io (Lihtsam Alternatiiv)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Socket.io server + klient</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// SERVER (server.js)
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
+const app = express();
+const http = createServer(app);
+const io = new Server(http, { cors: { origin: '*' } });
+
+app.use(express.static('public'));
+
+const gameState = { players: {} };
+
+io.on('connection', (socket) => {
+  console.log(`Mängija ühines: ${socket.id}`);
+
+  gameState.players[socket.id] = {
+    x: 400, y: 300,
+    color: `hsl(${Math.random() * 360}, 70%, 60%)`
+  };
+
+  socket.emit('init', { id: socket.id, state: gameState });
+  socket.broadcast.emit('playerJoin', {
+    id: socket.id, ...gameState.players[socket.id]
+  });
+
+  socket.on('move', (data) => {
+    if (gameState.players[socket.id]) {
+      gameState.players[socket.id].x = data.x;
+      gameState.players[socket.id].y = data.y;
+      socket.broadcast.emit('playerMove', { id: socket.id, ...data });
+    }
+  });
+
+  socket.on('disconnect', () => {
+    delete gameState.players[socket.id];
+    io.emit('playerLeave', { id: socket.id });
+  });
+});
+
+http.listen(3000, () => console.log('Server käivitatud: http://localhost:3000'));
+
+// KLIENT (public/game.js)
+// const socket = io();
+// socket.on('init', (data) => { ... });
+// socket.on('playerMove', (data) => { ... });
+// socket.emit('move', { x: player.x, y: player.y });</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>⚡ Samm 4 — Latentsuse Kompenseerimine</h2>
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div>
+            <p><strong>Networking'i raskaimad probleemid:</strong></p>
+            <ul>
+              <li><strong>Latentsus (lag):</strong> Sõnum võtab aega — client-side prediction aitab</li>
+              <li><strong>Paketikadu:</strong> Mõned sõnumid ei jõua kohale — interpolatsioon silub probleemi</li>
+              <li><strong>Sünkroniseerimine:</strong> Erinevad kliendid näevad erinevat olekut — server on autoriteetne</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Interpolatsioon ja prediction</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Client-side prediction — liiguta kohe, server valideerib hiljem
+function handleInput(input) {
+  // 1. Rakenda kohe lokaalselt
+  applyInput(localPlayer, input);
+  
+  // 2. Salvesta sisendihistooria
+  inputHistory.push({ seq: sequenceNumber++, input, state: {...localPlayer} });
+  
+  // 3. Saada serverile
+  socket.emit('input', { seq: sequenceNumber, input });
+}
+
+// Server kinnitab — kui erinev, paranda
+socket.on('serverState', (state) => {
+  // Keera tagasi viimase kinnitatud olekuni
+  localPlayer.x = state.x;
+  localPlayer.y = state.y;
+  
+  // Rakenda uuesti kõik kinnitamata sisendid
+  const unacked = inputHistory.filter(i => i.seq > state.lastProcessedSeq);
+  for (const entry of unacked) {
+    applyInput(localPlayer, entry.input);
+  }
+});
+
+// Entity interpolation — teised mängijad
+class RemotePlayer {
+  constructor() {
+    this.posHistory = []; // [{time, x, y}]
+    this.renderDelay = 100; // ms
+  }
+
+  addPosition(x, y) {
+    this.posHistory.push({ time: Date.now(), x, y });
+    if (this.posHistory.length > 10) this.posHistory.shift();
+  }
+
+  getPosition() {
+    const renderTime = Date.now() - this.renderDelay;
+    // Leia kaks positsiooni mille vahel interpoleerida
+    for (let i = 1; i < this.posHistory.length; i++) {
+      const a = this.posHistory[i - 1];
+      const b = this.posHistory[i];
+      if (renderTime >= a.time && renderTime <= b.time) {
+        const t = (renderTime - a.time) / (b.time - a.time);
+        return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) };
+      }
+    }
+    return this.posHistory[this.posHistory.length - 1] || { x: 0, y: 0 };
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>WebSocket chat</h4>
+              <p>Loo lihtne WebSocket chat server + klient. Mitu brauseri akent saavad sõnumeid saata ja vastu võtta. Lisa kasutajanimed ja ajatemplid.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Multiplayer liikumine</h4>
+              <p>Loo server mis haldab mängijate positsioone. Kliendid liiguvad WASD-ga, näevad teisi reaalajas. Lisa interplolaitsioon sujuvaks kuvamiseks.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Socket.io mänguruum</h4>
+              <p>Loo Socket.io-ga mänguroomide süsteem: mängijad saavad luua ja liituda ruumidega. Iga ruum on eraldi mäng. Lisa mängijate nimekiri ruumis.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Server autoriteetne mudel</h4>
+              <p>Liiguta mänguloogika serverile — klient saadab ainult sisendid, server arvutab positsiooni ja saadab tulemused. Tee vahet kliendi ja serveri olekul.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Client-side prediction</h4>
+              <p>Implementeeri client-side prediction: liiguta mängijat kohe, saada input serverile, paranda kui server erineb. Lisa kunstlik lag testimiseks (<code>setTimeout</code>).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Multiplayer mäng</h4>
+              <p>Ehita täielik multiplayer mäng: 2-4 mängijat, tulistamine, skoor, mänguroomid. Server valideerib kõik. Deploy Render/Railway platvormile.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../08b-ui-ux/index.html" class="btn btn-secondary">← Moodul 08b</a>
+        <a href="../09b-protseduurne/index.html" class="btn btn-primary">Moodul 09b: Protseduurne →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

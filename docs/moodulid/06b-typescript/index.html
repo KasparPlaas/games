@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 06b · TypeScript Mängudes — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>06b · TypeScript Mängudes</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size:0.85rem;">MOODUL 06b · TASE 2 — EDASIJÕUDNUD</div>
+        <h1>🔷 TypeScript Mängudes</h1>
+        <p class="module-subtitle">Tüübiturvalisus, interfaced, generics ja OOP mustrid — TypeScript muudab su mängukoodi usaldusväärsemaks ja hooldatavamaks.</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~4-5 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🟡 Edasijõudnud</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>⚡ Samm 1 — TypeScript Seadistamine</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Paigalda TypeScript
+npm install -D typescript
+
+# Loo tsconfig.json
+npx tsc --init
+
+# Vite + TypeScript töötab juba automaatselt!</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">tsconfig.json — Mänguprojektile</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,                // ALATI strict mode!
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"]
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📦 Samm 2 — Tüübid ja Interfaced</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/types.ts — Mängu tüübid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Lihtsad tüübid
+type PlayerState = 'idle' | 'running' | 'jumping' | 'falling' | 'dead';
+type Direction = 'left' | 'right' | 'up' | 'down';
+
+// Interface — objekti kuju
+interface Vector2D {
+  x: number;
+  y: number;
+}
+
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// Mängu entity interface
+interface Entity {
+  id: string;
+  position: Vector2D;
+  velocity: Vector2D;
+  bounds: Bounds;
+  active: boolean;
+  update(deltaTime: number): void;
+  draw(ctx: CanvasRenderingContext2D): void;
+  destroy(): void;
+}
+
+// Mängu seadistus
+interface GameConfig {
+  width: number;
+  height: number;
+  gravity: number;
+  debug: boolean;
+  audio: {
+    masterVolume: number;
+    musicVolume: number;
+    sfxVolume: number;
+  };
+}
+
+// Enum - mängu olekud
+enum GameState {
+  Loading = 'loading',
+  Menu = 'menu',
+  Playing = 'playing',
+  Paused = 'paused',
+  GameOver = 'gameover',
+}
+
+// Ekspordi
+export { PlayerState, Direction, Vector2D, Bounds, Entity, GameConfig, GameState };</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏗️ Samm 3 — Klassid ja Pärimine</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/entities/GameObject.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import { Entity, Vector2D, Bounds } from '../types';
+
+// Abstraktne baasklass — ei saa otse luua
+abstract class GameObject implements Entity {
+  public id: string;
+  public position: Vector2D;
+  public velocity: Vector2D;
+  public active: boolean = true;
+  public width: number;
+  public height: number;
+
+  constructor(x: number, y: number, width: number, height: number) {
+    this.id = crypto.randomUUID();
+    this.position = { x, y };
+    this.velocity = { x: 0, y: 0 };
+    this.width = width;
+    this.height = height;
+  }
+
+  get bounds(): Bounds {
+    return {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+    };
+  }
+
+  // Abstraktsed meetodid — alamklassid PEAVAD implementeerima
+  abstract update(deltaTime: number): void;
+  abstract draw(ctx: CanvasRenderingContext2D): void;
+
+  destroy(): void {
+    this.active = false;
+  }
+
+  // Kokkupõrke kontroll
+  collidesWith(other: GameObject): boolean {
+    const a = this.bounds;
+    const b = other.bounds;
+    return (
+      a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y
+    );
+  }
+}
+
+export { GameObject };</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/entities/Player.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import { GameObject } from './GameObject';
+import { PlayerState } from '../types';
+
+class Player extends GameObject {
+  public state: PlayerState = 'idle';
+  public health: number = 100;
+  public maxHealth: number = 100;
+  private speed: number = 200;
+  private jumpForce: number = -400;
+  private isGrounded: boolean = false;
+
+  constructor(x: number, y: number) {
+    super(x, y, 32, 48);
+  }
+
+  update(deltaTime: number): void {
+    // Gravitatsioon
+    this.velocity.y += 980 * deltaTime;
+
+    // Liikumine
+    this.position.x += this.velocity.x * deltaTime;
+    this.position.y += this.velocity.y * deltaTime;
+
+    // Oleku uuendamine
+    if (!this.isGrounded && this.velocity.y > 0) {
+      this.state = 'falling';
+    } else if (!this.isGrounded && this.velocity.y < 0) {
+      this.state = 'jumping';
+    } else if (Math.abs(this.velocity.x) > 0.1) {
+      this.state = 'running';
+    } else {
+      this.state = 'idle';
+    }
+  }
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    // Värv vastavalt olekule
+    const colors: Record&lt;PlayerState, string&gt; = {
+      idle: '#22c55e',
+      running: '#3b82f6',
+      jumping: '#eab308',
+      falling: '#f97316',
+      dead: '#ef4444',
+    };
+
+    ctx.fillStyle = colors[this.state];
+    ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+
+    // Tervis riba
+    const barWidth = this.width;
+    const healthPct = this.health / this.maxHealth;
+    ctx.fillStyle = '#374151';
+    ctx.fillRect(this.position.x, this.position.y - 8, barWidth, 4);
+    ctx.fillStyle = healthPct > 0.3 ? '#22c55e' : '#ef4444';
+    ctx.fillRect(this.position.x, this.position.y - 8, barWidth * healthPct, 4);
+  }
+
+  moveLeft(): void { this.velocity.x = -this.speed; }
+  moveRight(): void { this.velocity.x = this.speed; }
+  stopX(): void { this.velocity.x = 0; }
+
+  jump(): void {
+    if (this.isGrounded) {
+      this.velocity.y = this.jumpForce;
+      this.isGrounded = false;
+    }
+  }
+
+  land(groundY: number): void {
+    this.position.y = groundY - this.height;
+    this.velocity.y = 0;
+    this.isGrounded = true;
+  }
+
+  takeDamage(amount: number): void {
+    this.health = Math.max(0, this.health - amount);
+    if (this.health <= 0) this.state = 'dead';
+  }
+}
+
+export { Player };</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🧩 Samm 4 — Generics</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/systems/ObjectPool.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Generic Object Pool — töötab iga tüübiga!
+class ObjectPool&lt;T extends { active: boolean }&gt; {
+  private pool: T[] = [];
+  private factory: () => T;
+  private maxSize: number;
+
+  constructor(factory: () => T, maxSize: number = 100) {
+    this.factory = factory;
+    this.maxSize = maxSize;
+
+    // Eeltäida pool
+    for (let i = 0; i < maxSize; i++) {
+      const obj = this.factory();
+      obj.active = false;
+      this.pool.push(obj);
+    }
+  }
+
+  get(): T | null {
+    const obj = this.pool.find(o => !o.active);
+    if (obj) {
+      obj.active = true;
+      return obj;
+    }
+    return null;
+  }
+
+  release(obj: T): void {
+    obj.active = false;
+  }
+
+  getActive(): T[] {
+    return this.pool.filter(o => o.active);
+  }
+
+  get activeCount(): number {
+    return this.pool.filter(o => o.active).length;
+  }
+}
+
+// Kasutamine:
+// const bulletPool = new ObjectPool&lt;Bullet&gt;(() => new Bullet(), 50);
+// const bullet = bulletPool.get();
+// if (bullet) { /* configure and use */ }
+// bulletPool.release(bullet);
+
+export { ObjectPool };</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎮 Samm 5 — Event System</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/systems/EventBus.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Tüübitud sündmused
+interface GameEvents {
+  'player:damage': { amount: number; source: string };
+  'player:death': { position: { x: number; y: number } };
+  'enemy:killed': { id: string; score: number };
+  'score:changed': { score: number; combo: number };
+  'level:complete': { level: number; time: number };
+}
+
+class EventBus {
+  private listeners = new Map&lt;string, Function[]&gt;();
+
+  on&lt;K extends keyof GameEvents&gt;(
+    event: K,
+    callback: (data: GameEvents[K]) => void
+  ): void {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event)!.push(callback);
+  }
+
+  off&lt;K extends keyof GameEvents&gt;(
+    event: K,
+    callback: (data: GameEvents[K]) => void
+  ): void {
+    const listeners = this.listeners.get(event);
+    if (listeners) {
+      const index = listeners.indexOf(callback);
+      if (index >= 0) listeners.splice(index, 1);
+    }
+  }
+
+  emit&lt;K extends keyof GameEvents&gt;(event: K, data: GameEvents[K]): void {
+    const listeners = this.listeners.get(event);
+    if (listeners) {
+      listeners.forEach(cb => cb(data));
+    }
+  }
+}
+
+// Globaalne event bus
+export const eventBus = new EventBus();
+
+// Kasutamine:
+// eventBus.on('enemy:killed', (data) => {
+//   console.log(`+${data.score} points!`);
+// });
+// eventBus.emit('enemy:killed', { id: 'enemy-1', score: 100 });</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06b" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>TypeScript projekti seadistamine</h4>
+              <p>Loo uus Vite + TypeScript projekt mängule. Seadista tsconfig.json strict mode'iga. Konverteeri üks varasem JavaScript mäng TypeScript'iks.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06b" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Interface'id ja tüübid</h4>
+              <p>Defineeri kõik mängu tüübid: Entity, Player, Enemy, Bullet, GameState. Kasuta union tüüpe olekute jaoks ja võimaldatu tüübikaitseid (type guards).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06b" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Abstract klass ja pärimine</h4>
+              <p>Loo <code>GameObject</code> abstraktne klass. Laienda sellest <code>Player</code>, <code>Enemy</code> ja <code>Bullet</code>. Igal on oma <code>update()</code> ja <code>draw()</code>.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06b" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Generic ObjectPool</h4>
+              <p>Implementeeri generic ObjectPool&lt;T&gt; mis töötab kuulide, vaenlaste ja partiklitega. Testi et poolist saab objekte ja tagastab need. Lisa statistika (active/total).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06b" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Tüübitud EventBus</h4>
+              <p>Ehita tüübitud EventBus süsteem. Defineeri GameEvents interface kõigi mängu sündmustega. Integreeri mängu nii et mängija surm, skoor jne kasutavad event bus'i.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../06-graafika-heli/index.html" class="btn btn-secondary">← Moodul 06</a>
+        <a href="../07-arhitektuur/index.html" class="btn btn-primary">Moodul 07: Arhitektuur →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

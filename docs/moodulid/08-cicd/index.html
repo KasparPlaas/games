@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 08 · CI/CD ja Automatiseerimine — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>08 · CI/CD ja Automatiseerimine</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 08 · TASE 3 — KESKMINE</div>
+        <h1>⚙️ CI/CD ja Automatiseerimine</h1>
+        <p class="module-subtitle">GitHub Actions, automaatsed testid, linting, build pipeline — iga push automaatselt testitud ja deployitud!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~4-5 tundi</span>
+          <span class="meta-item">📝 6 harjutust</span>
+          <span class="meta-item">🟠 Keskmine</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🔄 Samm 1 — GitHub Actions Põhialused</h2>
+        <p>GitHub Actions käivitab automaatselt skripte iga push'i, PR-i või scheduli peale.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">.github/workflows/ci.yml</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout koodi
+        uses: actions/checkout@v4
+
+      - name: Seadista Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Paigalda sõltuvused
+        run: npm ci
+
+      - name: ESLint kontroll
+        run: npm run lint
+
+      - name: TypeScript kompileerimine
+        run: npm run typecheck
+
+      - name: Testid
+        run: npm test
+
+      - name: Build
+        run: npm run build</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🚀 Samm 2 — Automaatne Deploy</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">.github/workflows/deploy.yml</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🧪 Samm 3 — Testid Vitest'iga</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Paigalda Vitest
+npm install -D vitest</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">tests/Vector2D.test.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import { describe, it, expect } from 'vitest';
+import { Vector2D } from '../src/math/Vector2D';
+
+describe('Vector2D', () => {
+  it('peaks liitma kaks vektorit', () => {
+    const a = new Vector2D(3, 4);
+    const b = new Vector2D(1, 2);
+    const result = a.add(b);
+    expect(result.x).toBe(4);
+    expect(result.y).toBe(6);
+  });
+
+  it('peaks arvutama pikkuse', () => {
+    const v = new Vector2D(3, 4);
+    expect(v.magnitude).toBeCloseTo(5);
+  });
+
+  it('peaks normaliseerima', () => {
+    const v = new Vector2D(10, 0);
+    const n = v.normalize();
+    expect(n.x).toBeCloseTo(1);
+    expect(n.y).toBeCloseTo(0);
+  });
+
+  it('peaks arvutama kauguse', () => {
+    const a = new Vector2D(0, 0);
+    const b = new Vector2D(3, 4);
+    expect(a.distanceTo(b)).toBeCloseTo(5);
+  });
+
+  it('peaks lerp töötama', () => {
+    const a = new Vector2D(0, 0);
+    const b = new Vector2D(10, 10);
+    const mid = Vector2D.lerp(a, b, 0.5);
+    expect(mid.x).toBeCloseTo(5);
+    expect(mid.y).toBeCloseTo(5);
+  });
+});
+
+describe('AABB Collision', () => {
+  it('peaks tuvastama kokkupõrget', () => {
+    const a = { x: 0, y: 0, w: 10, h: 10 };
+    const b = { x: 5, y: 5, w: 10, h: 10 };
+    expect(aabbCollision(a, b)).toBe(true);
+  });
+
+  it('peaks mitte tuvastama kaugeid objekte', () => {
+    const a = { x: 0, y: 0, w: 10, h: 10 };
+    const b = { x: 50, y: 50, w: 10, h: 10 };
+    expect(aabbCollision(a, b)).toBe(false);
+  });
+});</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📏 Samm 4 — ESLint ja Prettier</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal + konfiguratsioon</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Paigalda
+npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier
+
+# eslint.config.js
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
+
+export default [
+  {
+    files: ['src/**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: { project: './tsconfig.json' }
+    },
+    plugins: { '@typescript-eslint': tseslint },
+    rules: {
+      'no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'warn',
+      'no-console': ['warn', { allow: ['warn', 'error'] }]
+    }
+  }
+];
+
+// package.json skriptid:
+// "lint": "eslint src/",
+// "lint:fix": "eslint src/ --fix",
+// "typecheck": "tsc --noEmit",
+// "test": "vitest run",
+// "test:watch": "vitest"</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏷️ Samm 5 — Automaatne Release</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">.github/workflows/release.yml</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Loo ZIP
+        run: cd dist && zip -r ../game-${{ github.ref_name }}.zip .
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: game-${{ github.ref_name }}.zip
+          generate_release_notes: true</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Esimene GitHub Actions workflow</h4>
+              <p>Loo <code>.github/workflows/ci.yml</code> mis käivitab <code>npm test</code> iga push'i peale. Tee tahtlik vigane push ja vaata et action läbi kukub, siis paranda.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Vitest testid mängu matemaatikale</h4>
+              <p>Kirjuta vähemalt 10 testi: Vector2D, AABB collision, lerp, clamp, random range. Kõik testid peavad läbima CI-s.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>ESLint + Prettier seadistamine</h4>
+              <p>Seadista ESLint TypeScript'iga ja Prettier. Lisa pre-commit hook (husky + lint-staged) mis kontrollib koodi enne commit'i.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Automaatne deploy GitHub Pages'ile</h4>
+              <p>Loo deploy workflow mis ehitab Vite projekti ja deployib automaatselt. Testi et iga main'i push uuendab live saiti.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Automaatne Release tag'iga</h4>
+              <p>Loo release workflow mis käivitub <code>git push --tags</code> peale. Ehitab mängu, loob ZIP ja teeb GitHub Release koos binaaridega.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Täielik CI/CD pipeline</h4>
+              <p>Kombineeri kõik: lint → typecheck → test → build → deploy. Lisa status badges README-sse. Pipeline peab blokeerima merge'i kui testid ebaõnnestuvad.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../07b-algoritmid/index.html" class="btn btn-secondary">← Moodul 07b</a>
+        <a href="../08b-ui-ux/index.html" class="btn btn-primary">Moodul 08b: UI/UX →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

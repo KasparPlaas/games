@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 11 · 3D Mängumootor — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>11 · 3D Mängumootor</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 11 · TASE 4 — EDASIJÕUDNUD+</div>
+        <h1>🏗️ 3D Mängumootor Ehitamine</h1>
+        <p class="module-subtitle">Füüsikamootor Cannon.js + Rapier, 3D kokkupõrked, ECS 3D-s, scene graph — ehita oma 3D mängumootori alus!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~8-10 tundi</span>
+          <span class="meta-item">📝 7 harjutust</span>
+          <span class="meta-item">🔴 Edasijõudnud+</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>⚡ Samm 1 — Füüsikamootor (Cannon-es)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>npm install cannon-es  # Cannon.js TypeScript fork</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">physics.ts — Füüsikamaailm</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import * as CANNON from 'cannon-es';
+import * as THREE from 'three';
+
+// Füüsikamaailm
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.82, 0),
+});
+world.broadphase = new CANNON.SAPBroadphase(world);
+
+// Põrand (staatiline keha)
+const floorBody = new CANNON.Body({
+  type: CANNON.Body.STATIC,
+  shape: new CANNON.Plane(),
+});
+floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+world.addBody(floorBody);
+
+// Dünaamiline kuubik
+const boxBody = new CANNON.Body({
+  mass: 1,
+  shape: new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)),
+  position: new CANNON.Vec3(0, 5, 0),
+});
+world.addBody(boxBody);
+
+// Three.js mesh
+const boxMesh = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshStandardMaterial({ color: 0x22c55e })
+);
+scene.add(boxMesh);
+
+// Sünkroniseeri füüsika ja graafika
+function updatePhysics(delta: number): void {
+  world.step(1 / 60, delta, 3);
+
+  // Kopeeri füüsika positsioon mesh'ile
+  boxMesh.position.copy(boxBody.position as any);
+  boxMesh.quaternion.copy(boxBody.quaternion as any);
+}
+
+// Jõu rakendamine
+function applyForce(direction: CANNON.Vec3): void {
+  boxBody.applyForce(direction, boxBody.position);
+}
+
+// Impulss (ühekordne jõud, nt hüpe)
+function jump(): void {
+  if (isGrounded()) {
+    boxBody.applyImpulse(new CANNON.Vec3(0, 8, 0), boxBody.position);
+  }
+}
+
+function isGrounded(): boolean {
+  // Ray cast alla
+  const ray = new CANNON.Ray(boxBody.position, new CANNON.Vec3(0, -1, 0));
+  const result = new CANNON.RaycastResult();
+  ray.intersectWorld(world, { result, skipBackfaces: true });
+  return result.hasHit && result.distance < 0.6;
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🧱 Samm 2 — Physics Body Manager</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">PhysicsManager.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface PhysicsObject {
+  body: CANNON.Body;
+  mesh: THREE.Mesh;
+}
+
+class PhysicsManager {
+  private world: CANNON.World;
+  private objects: PhysicsObject[] = [];
+
+  constructor() {
+    this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
+    this.world.broadphase = new CANNON.SAPBroadphase(this.world);
+    this.world.allowSleep = true; // Magavad kehad ei arvuteta
+
+    // Kontaktmaterjal (hõõrdumine ja põrkumine)
+    const defaultMaterial = new CANNON.Material('default');
+    const contactMaterial = new CANNON.ContactMaterial(
+      defaultMaterial, defaultMaterial,
+      { friction: 0.3, restitution: 0.4 }
+    );
+    this.world.addContactMaterial(contactMaterial);
+    this.world.defaultContactMaterial = contactMaterial;
+  }
+
+  addBox(mesh: THREE.Mesh, mass: number, size: THREE.Vector3): CANNON.Body {
+    const halfExtents = new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2);
+    const body = new CANNON.Body({
+      mass,
+      shape: new CANNON.Box(halfExtents),
+      position: new CANNON.Vec3(mesh.position.x, mesh.position.y, mesh.position.z),
+    });
+    this.world.addBody(body);
+    this.objects.push({ body, mesh });
+    return body;
+  }
+
+  addSphere(mesh: THREE.Mesh, mass: number, radius: number): CANNON.Body {
+    const body = new CANNON.Body({
+      mass,
+      shape: new CANNON.Sphere(radius),
+      position: new CANNON.Vec3(mesh.position.x, mesh.position.y, mesh.position.z),
+    });
+    this.world.addBody(body);
+    this.objects.push({ body, mesh });
+    return body;
+  }
+
+  update(delta: number): void {
+    this.world.step(1 / 60, delta, 3);
+
+    for (const obj of this.objects) {
+      obj.mesh.position.copy(obj.body.position as any);
+      obj.mesh.quaternion.copy(obj.body.quaternion as any);
+    }
+  }
+
+  removeObject(body: CANNON.Body): void {
+    const index = this.objects.findIndex(o => o.body === body);
+    if (index >= 0) {
+      this.world.removeBody(body);
+      this.objects.splice(index, 1);
+    }
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎮 Samm 3 — 3D Mängumootori Struktuur</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Engine.ts — Mootori tuumik</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class GameEngine {
+  private scene: THREE.Scene;
+  private camera: THREE.PerspectiveCamera;
+  private renderer: THREE.WebGLRenderer;
+  private physics: PhysicsManager;
+  private clock: THREE.Clock;
+  private entities: Map&lt;string, GameEntity&gt; = new Map();
+  private systems: GameSystem[] = [];
+  private isRunning = false;
+
+  constructor(container: HTMLElement) {
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.shadowMap.enabled = true;
+    container.appendChild(this.renderer.domElement);
+
+    this.physics = new PhysicsManager();
+    this.clock = new THREE.Clock();
+
+    this.setupDefaultLighting();
+  }
+
+  private setupDefaultLighting(): void {
+    this.scene.add(new THREE.AmbientLight(0x404080, 0.5));
+    const sun = new THREE.DirectionalLight(0xffffff, 1);
+    sun.position.set(10, 20, 10);
+    sun.castShadow = true;
+    this.scene.add(sun);
+  }
+
+  addEntity(entity: GameEntity): void {
+    this.entities.set(entity.id, entity);
+    if (entity.mesh) this.scene.add(entity.mesh);
+  }
+
+  removeEntity(id: string): void {
+    const entity = this.entities.get(id);
+    if (entity) {
+      if (entity.mesh) this.scene.remove(entity.mesh);
+      entity.destroy();
+      this.entities.delete(id);
+    }
+  }
+
+  addSystem(system: GameSystem): void {
+    this.systems.push(system);
+    this.systems.sort((a, b) => a.priority - b.priority);
+  }
+
+  start(): void {
+    this.isRunning = true;
+    this.gameLoop();
+  }
+
+  private gameLoop(): void {
+    if (!this.isRunning) return;
+    requestAnimationFrame(() => this.gameLoop());
+
+    const delta = this.clock.getDelta();
+
+    // Update süsteemid
+    for (const system of this.systems) {
+      system.update(this.entities, delta);
+    }
+
+    // Füüsika
+    this.physics.update(delta);
+
+    // Render
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+// Kasutamine:
+// const engine = new GameEngine(document.body);
+// engine.addSystem(new InputSystem());
+// engine.addSystem(new MovementSystem());
+// engine.addSystem(new CameraSystem());
+// engine.start();</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-11" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Füüsikamootor integratsioon</h4>
+              <p>Seadista Three.js + Cannon-es. Loo põrand ja 20 kuubikut mis kukuvad ja põrkavad. Lisa materjalide hõõrdumine ja põrkumine. Debug wireframe.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-11" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>PhysicsManager klass</h4>
+              <p>Loo PhysicsManager: addBox, addSphere, removeObject, raycast. Sünkroniseeri automaatselt Cannon kehad ja Three meshid. Lisa kontaktmaterjalid.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-11" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>3D mängija kontroller füüsikaga</h4>
+              <p>Loo mängija kontroller: WASD liikumine jõududega, hüppamine impulssiga, maapinna tuvastamine raycast'iga. Kaamera jälgib sujuvalt (lerp).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-11" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>GameEngine klass</h4>
+              <p>Loo mängumootori tuumik: Entity haldus, System pipeline, füüsika integratsioon, renderdamine. Lisai start/stop/pause. FPS counter.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-11" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Kokkupõrkereaktsioonid</h4>
+              <p>Kokkupõrke sündmused: collision callback. Kui kuubik tabab teist → heliefekt + värvimuutus + partiklid + score. Lisa trigger zone'id.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-11" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>3D platformer prototüüp</h4>
+              <p>Ehita 3D platformer: liikuvad platvormid, hüppamine, kogutavad mündid, ohtlikud alad. 3 taset, iga tase keerulisem. Checkpoint süsteem.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-11" data-index="6" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Vehicle physics</h4>
+              <p>Loo sõiduk Cannon-es RaycastVehicle'iga: 4 ratast, gaas/pidur, roolimine. Lisa rambi ja hüpped. Lihtne rada koonustega.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../10b-shaderid/index.html" class="btn btn-secondary">← Moodul 10b</a>
+        <a href="../11b-3d-mudelid/index.html" class="btn btn-primary">Moodul 11b: 3D Mudelid →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

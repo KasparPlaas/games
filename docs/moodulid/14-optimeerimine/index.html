@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 14 · Optimeerimine — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>14 · Optimeerimine</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 14 · TASE 5 — SPETSIALIST</div>
+        <h1>⚡ Jõudluse Optimeerimine</h1>
+        <p class="module-subtitle">Profileerimine, mälu haldus, rendering pipeline, Web Workers, Object Pooling, LOD — saavuta 60 FPS!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~8-10 tundi</span>
+          <span class="meta-item">📝 7 harjutust</span>
+          <span class="meta-item">🟣 Spetsialist</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>📊 Samm 1 — Profileerimine</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">profiler.ts — Jõudluse mõõtmine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class PerformanceProfiler {
+  private timers: Map&lt;string, number&gt; = new Map();
+  private history: Map&lt;string, number[]&gt; = new Map();
+  private maxSamples = 120; // 2 sekundit @ 60fps
+
+  begin(label: string): void {
+    this.timers.set(label, performance.now());
+  }
+
+  end(label: string): number {
+    const start = this.timers.get(label);
+    if (start === undefined) return 0;
+    const elapsed = performance.now() - start;
+
+    if (!this.history.has(label)) this.history.set(label, []);
+    const samples = this.history.get(label)!;
+    samples.push(elapsed);
+    if (samples.length > this.maxSamples) samples.shift();
+
+    return elapsed;
+  }
+
+  getAverage(label: string): number {
+    const samples = this.history.get(label);
+    if (!samples || samples.length === 0) return 0;
+    return samples.reduce((a, b) => a + b, 0) / samples.length;
+  }
+
+  getMax(label: string): number {
+    const samples = this.history.get(label);
+    if (!samples) return 0;
+    return Math.max(...samples);
+  }
+
+  // Debug overlay
+  drawStats(ctx: CanvasRenderingContext2D): void {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(10, 10, 250, 20 + this.history.size * 18);
+    ctx.fillStyle = '#00ff00';
+    ctx.font = '12px monospace';
+
+    let y = 28;
+    for (const [label, samples] of this.history) {
+      const avg = this.getAverage(label);
+      const max = this.getMax(label);
+      const color = avg > 16 ? '#ff4444' : avg > 8 ? '#ffaa00' : '#00ff00';
+      ctx.fillStyle = color;
+      ctx.fillText(`${label}: ${avg.toFixed(2)}ms (max: ${max.toFixed(2)}ms)`, 20, y);
+      y += 18;
+    }
+    ctx.restore();
+  }
+}
+
+// Kasutamine:
+// const profiler = new PerformanceProfiler();
+// profiler.begin('physics');
+// updatePhysics();
+// profiler.end('physics');
+// profiler.begin('render');
+// render();
+// profiler.end('render');</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>♻️ Samm 2 — Object Pooling</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">objectPool.ts — Objektide taaskasutus</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class ObjectPool&lt;T&gt; {
+  private pool: T[] = [];
+  private active: Set&lt;T&gt; = new Set();
+  private factory: () =&gt; T;
+  private reset: (obj: T) =&gt; void;
+
+  constructor(
+    factory: () =&gt; T,
+    reset: (obj: T) =&gt; void,
+    initialSize = 50
+  ) {
+    this.factory = factory;
+    this.reset = reset;
+    // Eelloo objektid
+    for (let i = 0; i &lt; initialSize; i++) {
+      this.pool.push(factory());
+    }
+  }
+
+  acquire(): T {
+    let obj: T;
+    if (this.pool.length > 0) {
+      obj = this.pool.pop()!;
+    } else {
+      obj = this.factory(); // Pool tühi → loo uus
+      console.warn('ObjectPool: pool tühi, loon uue objekti');
+    }
+    this.reset(obj);
+    this.active.add(obj);
+    return obj;
+  }
+
+  release(obj: T): void {
+    if (this.active.delete(obj)) {
+      this.pool.push(obj);
+    }
+  }
+
+  get activeCount(): number { return this.active.size; }
+  get poolSize(): number { return this.pool.length; }
+}
+
+// Näide: Kuulide pool
+interface Bullet {
+  x: number; y: number;
+  vx: number; vy: number;
+  active: boolean;
+}
+
+const bulletPool = new ObjectPool&lt;Bullet&gt;(
+  () =&gt; ({ x: 0, y: 0, vx: 0, vy: 0, active: false }),
+  (b) =&gt; { b.active = true; },
+  200
+);
+
+function shoot(x: number, y: number, angle: number): void {
+  const bullet = bulletPool.acquire();
+  bullet.x = x;
+  bullet.y = y;
+  bullet.vx = Math.cos(angle) * 500;
+  bullet.vy = Math.sin(angle) * 500;
+}
+
+// Uuendus: taaskasuta "surnud" kuulid
+function updateBullets(delta: number): void {
+  for (const bullet of bulletPool['active']) {
+    bullet.x += bullet.vx * delta;
+    bullet.y += bullet.vy * delta;
+    if (isOffScreen(bullet)) {
+      bullet.active = false;
+      bulletPool.release(bullet);
+    }
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🧵 Samm 3 — Web Workers (Mitmelõimelisus)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">gameWorker.ts — Raske arvutus teises lõimes</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ============ physics.worker.ts ============
+// Eraldi fail — töötab teises lõimes!
+self.onmessage = (e: MessageEvent) =&gt; {
+  const { type, data } = e.data;
+
+  switch (type) {
+    case 'pathfind': {
+      // Raske A* arvutus ei blokeeri main thread'i
+      const path = aStarPathfind(data.grid, data.start, data.end);
+      self.postMessage({ type: 'pathResult', data: path });
+      break;
+    }
+    case 'generateTerrain': {
+      const terrain = generatePerlinTerrain(data.width, data.height, data.seed);
+      // Transferable: kiire üleandmine (zero-copy)
+      self.postMessage(
+        { type: 'terrainResult', data: terrain },
+        [terrain.buffer]  // Transfer ownership
+      );
+      break;
+    }
+  }
+};
+
+// ============ main.ts ============
+class WorkerManager {
+  private worker: Worker;
+  private callbacks: Map&lt;string, (data: any) =&gt; void&gt; = new Map();
+
+  constructor(scriptUrl: string) {
+    this.worker = new Worker(scriptUrl, { type: 'module' });
+    this.worker.onmessage = (e) =&gt; {
+      const { type, data } = e.data;
+      const cb = this.callbacks.get(type);
+      if (cb) {
+        cb(data);
+        this.callbacks.delete(type);
+      }
+    };
+  }
+
+  request&lt;T&gt;(type: string, data: any): Promise&lt;T&gt; {
+    return new Promise((resolve) =&gt; {
+      this.callbacks.set(type + 'Result', resolve);
+      this.worker.postMessage({ type, data });
+    });
+  }
+
+  terminate(): void {
+    this.worker.terminate();
+  }
+}
+
+// Kasutamine:
+// const physics = new WorkerManager('/workers/physics.worker.js');
+// const path = await physics.request('pathfind', { grid, start, end });
+// Tulemus: main thread ei blokeeru!</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🖥️ Samm 4 — Renderdamise Optimeerimine</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">renderOptimization.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// 1. Off-screen Canvas (eelrenderdamine)
+class CachedSprite {
+  private cache: OffscreenCanvas;
+  private cacheCtx: OffscreenCanvasRenderingContext2D;
+
+  constructor(private sourceImage: HTMLImageElement, private scale = 1) {
+    const w = sourceImage.width * scale;
+    const h = sourceImage.height * scale;
+    this.cache = new OffscreenCanvas(w, h);
+    this.cacheCtx = this.cache.getContext('2d')!;
+    this.cacheCtx.drawImage(sourceImage, 0, 0, w, h);
+  }
+
+  draw(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+    ctx.drawImage(this.cache, x, y);
+  }
+}
+
+// 2. Frustum culling (joonista ainult nähtavad)
+function isInView(
+  entity: { x: number; y: number; width: number; height: number },
+  camera: { x: number; y: number; width: number; height: number }
+): boolean {
+  return (
+    entity.x + entity.width > camera.x &&
+    entity.x &lt; camera.x + camera.width &&
+    entity.y + entity.height > camera.y &&
+    entity.y &lt; camera.y + camera.height
+  );
+}
+
+// 3. Batch rendering (grupeeritud joonistamine)
+function batchRender(
+  ctx: CanvasRenderingContext2D,
+  sprites: Array&lt;{ img: HTMLImageElement; x: number; y: number }&gt;,
+  camera: { x: number; y: number; width: number; height: number }
+): void {
+  // Sorteeri Z-järjekorras (taga → ees)
+  sprites.sort((a, b) =&gt; a.y - b.y);
+
+  // Joonista ainult nähtavad
+  for (const s of sprites) {
+    if (isInView({ x: s.x, y: s.y, width: 64, height: 64 }, camera)) {
+      ctx.drawImage(s.img, s.x - camera.x, s.y - camera.y);
+    }
+  }
+}
+
+// 4. requestAnimationFrame + delta time (mitte setInterval!)
+let lastTime = 0;
+function gameLoop(timestamp: number): void {
+  const delta = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  // Piira delta spike'e (nt tab vahetuse järel)
+  const clampedDelta = Math.min(delta, 0.05); // max 50ms
+
+  update(clampedDelta);
+  render();
+  requestAnimationFrame(gameLoop);
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>💾 Samm 5 — Mälu Haldus</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">memoryManagement.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// 1. Väldi GC pause — ära loo objekte game loopis!
+// HALB:
+function updateBad(): void {
+  const velocity = new Vector2(0, 0); // ❌ Iga frame uus objekt!
+  velocity.x = Math.cos(angle) * speed;
+  velocity.y = Math.sin(angle) * speed;
+}
+
+// HEA:
+const _tempVec = new Vector2(0, 0); // Korduvkasutatav
+function updateGood(): void {
+  _tempVec.set(Math.cos(angle) * speed, Math.sin(angle) * speed); // ✅
+}
+
+// 2. TypedArray suurte andmekogumite jaoks
+// Objektide asemel kasuta struktuuri-massiive (SoA):
+class ParticleSystem {
+  private count = 0;
+  private maxParticles: number;
+
+  // Structure of Arrays (SoA) — cache-sõbralik!
+  private x: Float32Array;
+  private y: Float32Array;
+  private vx: Float32Array;
+  private vy: Float32Array;
+  private life: Float32Array;
+
+  constructor(max = 10000) {
+    this.maxParticles = max;
+    this.x = new Float32Array(max);
+    this.y = new Float32Array(max);
+    this.vx = new Float32Array(max);
+    this.vy = new Float32Array(max);
+    this.life = new Float32Array(max);
+  }
+
+  emit(x: number, y: number, vx: number, vy: number): void {
+    if (this.count >= this.maxParticles) return;
+    const i = this.count++;
+    this.x[i] = x;
+    this.y[i] = y;
+    this.vx[i] = vx;
+    this.vy[i] = vy;
+    this.life[i] = 1;
+  }
+
+  update(dt: number): void {
+    for (let i = this.count - 1; i >= 0; i--) {
+      this.x[i] += this.vx[i] * dt;
+      this.y[i] += this.vy[i] * dt;
+      this.life[i] -= dt;
+      if (this.life[i] &lt;= 0) {
+        // Swap-remove (O(1) kustutamine)
+        this.count--;
+        this.x[i] = this.x[this.count];
+        this.y[i] = this.y[this.count];
+        this.vx[i] = this.vx[this.count];
+        this.vy[i] = this.vy[this.count];
+        this.life[i] = this.life[this.count];
+      }
+    }
+  }
+}
+// 10 000 partiklit ilma GC pausideta!</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Performance Profiler</h4>
+              <p>Loo profiler: begin/end, ajaloo graafik, värvikoodid (roheline/kollane/punane). Kuva reaalajas overlay mängu peal. FPS + frame time.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Object Pool geneerika</h4>
+              <p>Loo geneerine ObjectPool&lt;T&gt;: acquire, release, autoExpand. Kasuta kuulide, partiklite ja vaenlaste jaoks. Mõõda GC pause'ide vahe enne/pärast.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Web Worker pathfinding</h4>
+              <p>Liiguta A* algoritm Web Worker'isse. 100x100 grid, mitu agenti otsivad paralleelselt teed. Main thread jääb 60 FPS-le.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Renderdamise optimeerimine</h4>
+              <p>1000 sprite'i stseen: lisa frustum culling, batch rendering, off-screen cache. Mõõda FPS enne ja pärast igat optimeerimist.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>TypedArray partiklid</h4>
+              <p>10 000 partiklit SoA (Structure of Arrays) struktuuriga. Swap-remove kustutamine. Võrdle AoS vs SoA jõudlust. Chrome DevTools Memory tab.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Spatial hashing + instanced rendering</h4>
+              <p>Spatial hash grid 10 000 entity jaoks. Ainult lähedased entity'd kontrollivad kokkupõrkeid. Three.js: InstancedMesh 5000 puud. FPS mõõtmine.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14" data-index="6" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>LOD süsteem</h4>
+              <p>Level-of-Detail: 3D objektid vahetavad detailsust kauguse põhjal (high → medium → low → billboard). Lisa fade-üleminekud. Mõõda draw calls.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../13-ai-arendus/index.html" class="btn btn-secondary">← Moodul 13</a>
+        <a href="../14b-turvalisus/index.html" class="btn btn-primary">Moodul 14b: Turvalisus →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

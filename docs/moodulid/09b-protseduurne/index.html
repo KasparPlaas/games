@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 09b · Protseduurne Genereerimine — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>09b · Protseduurne Genereerimine</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size:0.85rem;">MOODUL 09b · TASE 3 — KESKMINE</div>
+        <h1>🌍 Protseduurne Genereerimine</h1>
+        <p class="module-subtitle">Perlin noise, dungeon genereerimine, Wave Function Collapse, BSP puud — loo lõpmata unikaalseid maailmu!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~5-6 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🟠 Keskmine</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🌊 Samm 1 — Perlin Noise</h2>
+        <p>Perlin noise genereerib sujuvaid juhuslikke mustreid — ideaalne maastiku, pilvede ja muude loomulike kujundite jaoks.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">noise.ts — Lihtne Perlin noise</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Lihtne 2D noise implementatsioon
+class SimpleNoise {
+  private perm: number[];
+
+  constructor(seed: number = Math.random() * 65536) {
+    this.perm = this.buildPermutation(seed);
+  }
+
+  private buildPermutation(seed: number): number[] {
+    const p = Array.from({ length: 256 }, (_, i) => i);
+    // Shuffle seemnega
+    let s = seed;
+    for (let i = 255; i > 0; i--) {
+      s = (s * 16807 + 0) % 2147483647;
+      const j = s % (i + 1);
+      [p[i], p[j]] = [p[j], p[i]];
+    }
+    return [...p, ...p]; // Dubleeri
+  }
+
+  private fade(t: number): number {
+    return t * t * t * (t * (t * 6 - 15) + 10);
+  }
+
+  private grad(hash: number, x: number, y: number): number {
+    const h = hash & 3;
+    const u = h < 2 ? x : y;
+    const v = h < 2 ? y : x;
+    return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+  }
+
+  noise2D(x: number, y: number): number {
+    const X = Math.floor(x) & 255;
+    const Y = Math.floor(y) & 255;
+    const xf = x - Math.floor(x);
+    const yf = y - Math.floor(y);
+    const u = this.fade(xf);
+    const v = this.fade(yf);
+
+    const p = this.perm;
+    const a = p[X] + Y, b = p[X + 1] + Y;
+
+    return this.lerp(
+      this.lerp(this.grad(p[a], xf, yf), this.grad(p[b], xf - 1, yf), u),
+      this.lerp(this.grad(p[a + 1], xf, yf - 1), this.grad(p[b + 1], xf - 1, yf - 1), u),
+      v
+    );
+  }
+
+  private lerp(a: number, b: number, t: number): number {
+    return a + t * (b - a);
+  }
+
+  // Fractal Brownian Motion — mitu kihti noise'i
+  fbm(x: number, y: number, octaves: number = 6): number {
+    let value = 0, amplitude = 1, frequency = 1, maxValue = 0;
+    for (let i = 0; i < octaves; i++) {
+      value += this.noise2D(x * frequency, y * frequency) * amplitude;
+      maxValue += amplitude;
+      amplitude *= 0.5;   // Persistence
+      frequency *= 2;     // Lacunarity
+    }
+    return value / maxValue;
+  }
+}
+
+// Maastikaart genereerimiseks
+function generateHeightmap(width: number, height: number, scale: number = 0.02): number[][] {
+  const noise = new SimpleNoise(42);
+  const map: number[][] = [];
+
+  for (let y = 0; y < height; y++) {
+    map[y] = [];
+    for (let x = 0; x < width; x++) {
+      // FBM annab detailsema tulemuse
+      const value = noise.fbm(x * scale, y * scale, 6);
+      map[y][x] = (value + 1) / 2; // Normaliseeri 0-1
+    }
+  }
+  return map;
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏰 Samm 2 — Dungeon Genereerimine (BSP)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">dungeon.ts — BSP puu</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface Room {
+  x: number; y: number; width: number; height: number;
+}
+
+class BSPNode {
+  left: BSPNode | null = null;
+  right: BSPNode | null = null;
+  room: Room | null = null;
+
+  constructor(
+    public x: number, public y: number,
+    public width: number, public height: number
+  ) {}
+}
+
+function generateDungeon(
+  width: number, height: number, minRoomSize: number = 6
+): { grid: number[][]; rooms: Room[] } {
+  const grid = Array.from({ length: height }, () => Array(width).fill(1)); // 1 = sein
+  const rooms: Room[] = [];
+
+  function split(node: BSPNode, depth: number): void {
+    if (depth <= 0 || node.width < minRoomSize * 2 || node.height < minRoomSize * 2) {
+      // Loo tuba sellesse lehtsõlme
+      const roomW = minRoomSize + Math.floor(Math.random() * (node.width - minRoomSize));
+      const roomH = minRoomSize + Math.floor(Math.random() * (node.height - minRoomSize));
+      const roomX = node.x + Math.floor(Math.random() * (node.width - roomW));
+      const roomY = node.y + Math.floor(Math.random() * (node.height - roomH));
+
+      node.room = { x: roomX, y: roomY, width: roomW, height: roomH };
+      rooms.push(node.room);
+
+      // Joonista tuba grid'ile
+      for (let ry = roomY; ry < roomY + roomH; ry++) {
+        for (let rx = roomX; rx < roomX + roomW; rx++) {
+          if (ry >= 0 && ry < height && rx >= 0 && rx < width) {
+            grid[ry][rx] = 0; // 0 = põrand
+          }
+        }
+      }
+      return;
+    }
+
+    // Jaga horisontaalselt või vertikaalselt
+    const horizontal = Math.random() > 0.5;
+
+    if (horizontal && node.height > minRoomSize * 2) {
+      const splitY = node.y + minRoomSize + Math.floor(Math.random() * (node.height - minRoomSize * 2));
+      node.left = new BSPNode(node.x, node.y, node.width, splitY - node.y);
+      node.right = new BSPNode(node.x, splitY, node.width, node.y + node.height - splitY);
+    } else if (node.width > minRoomSize * 2) {
+      const splitX = node.x + minRoomSize + Math.floor(Math.random() * (node.width - minRoomSize * 2));
+      node.left = new BSPNode(node.x, node.y, splitX - node.x, node.height);
+      node.right = new BSPNode(splitX, node.y, node.x + node.width - splitX, node.height);
+    }
+
+    if (node.left) split(node.left, depth - 1);
+    if (node.right) split(node.right, depth - 1);
+  }
+
+  const root = new BSPNode(1, 1, width - 2, height - 2);
+  split(root, 5);
+
+  // Ühenda toad koridoridega
+  for (let i = 0; i < rooms.length - 1; i++) {
+    connectRooms(grid, rooms[i], rooms[i + 1]);
+  }
+
+  return { grid, rooms };
+}
+
+function connectRooms(grid: number[][], a: Room, b: Room): void {
+  let x = Math.floor(a.x + a.width / 2);
+  let y = Math.floor(a.y + a.height / 2);
+  const tx = Math.floor(b.x + b.width / 2);
+  const ty = Math.floor(b.y + b.height / 2);
+
+  while (x !== tx) {
+    if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length)
+      grid[y][x] = 0;
+    x += x < tx ? 1 : -1;
+  }
+  while (y !== ty) {
+    if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length)
+      grid[y][x] = 0;
+    y += y < ty ? 1 : -1;
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎲 Samm 3 — Cellular Automata (Koopamängud)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">caves.ts — Koopagenereerimine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>function generateCaves(width: number, height: number, fillPct = 0.45, iterations = 5): number[][] {
+  // 1. Juhuslik algseisund
+  let grid = Array.from({ length: height }, () =>
+    Array.from({ length: width }, () => Math.random() < fillPct ? 1 : 0)
+  );
+
+  // Äärised on alati seinad
+  for (let y = 0; y < height; y++) {
+    grid[y][0] = 1;
+    grid[y][width - 1] = 1;
+  }
+  for (let x = 0; x < width; x++) {
+    grid[0][x] = 1;
+    grid[height - 1][x] = 1;
+  }
+
+  // 2. Cellular automata iteratsioonid
+  for (let i = 0; i < iterations; i++) {
+    const newGrid = grid.map(row => [...row]);
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        const walls = countNeighborWalls(grid, x, y);
+        // B678/S345678 reegel (tavalisim koobaste jaoks)
+        newGrid[y][x] = walls >= 5 ? 1 : walls <= 2 ? 1 : 0;
+      }
+    }
+    grid = newGrid;
+  }
+
+  return grid;
+}
+
+function countNeighborWalls(grid: number[][], x: number, y: number): number {
+  let count = 0;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      count += grid[y + dy]?.[x + dx] ?? 1;
+    }
+  }
+  return count;
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09b" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Perlin Noise maastik</h4>
+              <p>Genereeri 2D heightmap Perlin noise'iga. Visualiseeri: vesi (sinine), liiv (kollane), rohi (roheline), mägi (hall), lumi (valge). Lisa FBM mitu kihti.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09b" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>BSP Dungeon generaator</h4>
+              <p>Implementeeri BSP dungeon. Visualiseeri toad ja koridorid. Lisa vaenlased tubadesse, üks tuba on algus, teine lõpp. Iga refresh annab uue dungeni.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09b" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Cellular automata koobad</h4>
+              <p>Loo koobas cellular automata meetodiga. Lisa flood fill et kontrollida ühenduvust. Ühenda eraldatud koobad koridoridega. Visualiseeri iteratsioonide sammud.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09b" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Protseduurne linnagenereerimine</h4>
+              <p>Genereeri lihtsustatud linnakaart: teed ruudustikuna, majad (erineva suuruse kastid), pargid (rohelised alad). Lisa juhuslikkust teedele ja hoonetele.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-09b" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Seemnepõhine genereerimine</h4>
+              <p>Lisa kõigile generaatoritele seemnefunktsioon (seed). Sama seeme = sama tulemus. Lisa UI kus kasutaja saab seemnearvu sisestada ja tulemust näha. Lisa "share seed" nupp.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../09-multiplayer/index.html" class="btn btn-secondary">← Moodul 09</a>
+        <a href="../10-threejs/index.html" class="btn btn-primary">Moodul 10: Three.js →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

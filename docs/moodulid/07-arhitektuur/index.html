@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 07 · Mängu Arhitektuur — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>07 · Mängu Arhitektuur</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 07 · TASE 3 — KESKMINE</div>
+        <h1>🏗️ Mängu Arhitektuur &amp; Disainimustrid</h1>
+        <p class="module-subtitle">ECS (Entity Component System), State Machine, Observer — mustrid mis hoiavad su koodi puhtana ka 10 000 rida koodi juures.</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~6-8 tundi</span>
+          <span class="meta-item">📝 6 harjutust</span>
+          <span class="meta-item">🟠 Keskmine</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🧠 Samm 1 — State Machine (Olekumasin)</h2>
+        <p>Olekumasin haldab objekti käitumist (idle, patrolling, attacking). Iga olek teab mida teha ja millal vahetada.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">StateMachine.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface State {
+  name: string;
+  enter(): void;
+  update(dt: number): void;
+  exit(): void;
+}
+
+class StateMachine {
+  private states = new Map&lt;string, State&gt;();
+  private current: State | null = null;
+
+  add(state: State): void {
+    this.states.set(state.name, state);
+  }
+
+  change(name: string): void {
+    if (this.current) this.current.exit();
+    this.current = this.states.get(name) || null;
+    if (this.current) this.current.enter();
+  }
+
+  update(dt: number): void {
+    if (this.current) this.current.update(dt);
+  }
+
+  get currentState(): string {
+    return this.current?.name || 'none';
+  }
+}
+
+// Vaenlase olekud
+class IdleState implements State {
+  name = 'idle';
+  private enemy: Enemy;
+  private timer = 0;
+
+  constructor(enemy: Enemy) { this.enemy = enemy; }
+
+  enter() { this.timer = 0; }
+
+  update(dt: number) {
+    this.timer += dt;
+    // Mängija lähedal? → jahtimine!
+    const dist = distance(this.enemy.pos, player.pos);
+    if (dist < 200) {
+      this.enemy.fsm.change('chase');
+    }
+    // Igav? → patrulli
+    if (this.timer > 3) {
+      this.enemy.fsm.change('patrol');
+    }
+  }
+
+  exit() {}
+}
+
+class ChaseState implements State {
+  name = 'chase';
+  private enemy: Enemy;
+
+  constructor(enemy: Enemy) { this.enemy = enemy; }
+
+  enter() { /* äratuse animatsioon */ }
+
+  update(dt: number) {
+    // Liigu mängija suunas
+    const dir = normalize(subtract(player.pos, this.enemy.pos));
+    this.enemy.pos.x += dir.x * this.enemy.speed * dt;
+    this.enemy.pos.y += dir.y * this.enemy.speed * dt;
+
+    // Piisavalt lähedal? → ründa!
+    const dist = distance(this.enemy.pos, player.pos);
+    if (dist < 40) {
+      this.enemy.fsm.change('attack');
+    }
+    // Liiga kaugel? → tagasi idle
+    if (dist > 400) {
+      this.enemy.fsm.change('idle');
+    }
+  }
+
+  exit() {}
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🧱 Samm 2 — Entity Component System (ECS)</h2>
+        <p>ECS lahutab andmed (Components) käitumisest (Systems). Entiteedid on lihtsalt ID-d.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">ecs.ts — Lihtne ECS</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Komponendid — puhas andmed, mitte loogika!
+interface PositionComponent {
+  type: 'position';
+  x: number;
+  y: number;
+}
+
+interface VelocityComponent {
+  type: 'velocity';
+  vx: number;
+  vy: number;
+}
+
+interface SpriteComponent {
+  type: 'sprite';
+  image: HTMLImageElement;
+  width: number;
+  height: number;
+}
+
+interface HealthComponent {
+  type: 'health';
+  current: number;
+  max: number;
+}
+
+interface ColliderComponent {
+  type: 'collider';
+  width: number;
+  height: number;
+  layer: string; // 'player' | 'enemy' | 'bullet'
+}
+
+type Component = PositionComponent | VelocityComponent | SpriteComponent
+  | HealthComponent | ColliderComponent;
+
+// Entity — lihtsalt ID + komponentide kogu
+type EntityId = number;
+
+class World {
+  private nextId: EntityId = 0;
+  private entities = new Map&lt;EntityId, Map&lt;string, Component&gt;&gt;();
+  private systems: System[] = [];
+
+  createEntity(): EntityId {
+    const id = this.nextId++;
+    this.entities.set(id, new Map());
+    return id;
+  }
+
+  addComponent(entity: EntityId, component: Component): void {
+    this.entities.get(entity)?.set(component.type, component);
+  }
+
+  getComponent&lt;T extends Component&gt;(entity: EntityId, type: string): T | undefined {
+    return this.entities.get(entity)?.get(type) as T | undefined;
+  }
+
+  // Leia kõik entiteedid kellel on nõutud komponendid
+  query(...types: string[]): EntityId[] {
+    const result: EntityId[] = [];
+    for (const [id, components] of this.entities) {
+      if (types.every(t => components.has(t))) {
+        result.push(id);
+      }
+    }
+    return result;
+  }
+
+  removeEntity(entity: EntityId): void {
+    this.entities.delete(entity);
+  }
+
+  addSystem(system: System): void {
+    this.systems.push(system);
+  }
+
+  update(dt: number): void {
+    for (const system of this.systems) {
+      system.update(this, dt);
+    }
+  }
+}
+
+// Süsteemid — loogika!
+interface System {
+  update(world: World, dt: number): void;
+}
+
+class MovementSystem implements System {
+  update(world: World, dt: number): void {
+    const entities = world.query('position', 'velocity');
+    for (const id of entities) {
+      const pos = world.getComponent&lt;PositionComponent&gt;(id, 'position')!;
+      const vel = world.getComponent&lt;VelocityComponent&gt;(id, 'velocity')!;
+      pos.x += vel.vx * dt;
+      pos.y += vel.vy * dt;
+    }
+  }
+}
+
+class RenderSystem implements System {
+  constructor(private ctx: CanvasRenderingContext2D) {}
+
+  update(world: World, dt: number): void {
+    const entities = world.query('position', 'sprite');
+    for (const id of entities) {
+      const pos = world.getComponent&lt;PositionComponent&gt;(id, 'position')!;
+      const spr = world.getComponent&lt;SpriteComponent&gt;(id, 'sprite')!;
+      this.ctx.drawImage(spr.image, pos.x, pos.y, spr.width, spr.height);
+    }
+  }
+}
+
+// Kasutamine:
+// const world = new World();
+// world.addSystem(new MovementSystem());
+// world.addSystem(new RenderSystem(ctx));
+// const player = world.createEntity();
+// world.addComponent(player, { type: 'position', x: 100, y: 200 });
+// world.addComponent(player, { type: 'velocity', vx: 0, vy: 0 });</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>👀 Samm 3 — Observer Muster</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">observer.ts — Sündmuste süsteem</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Observer — objektid kuulavad sündmusi
+class EventEmitter&lt;Events extends Record&lt;string, any&gt;&gt; {
+  private listeners = new Map&lt;string, Set&lt;Function&gt;&gt;();
+
+  on&lt;K extends keyof Events&gt;(event: K, fn: (data: Events[K]) => void): () => void {
+    if (!this.listeners.has(event as string))
+      this.listeners.set(event as string, new Set());
+    this.listeners.get(event as string)!.add(fn);
+
+    // Tagasta unsubscribe funktsioon
+    return () => this.off(event, fn);
+  }
+
+  off&lt;K extends keyof Events&gt;(event: K, fn: Function): void {
+    this.listeners.get(event as string)?.delete(fn);
+  }
+
+  emit&lt;K extends keyof Events&gt;(event: K, data: Events[K]): void {
+    this.listeners.get(event as string)?.forEach(fn => fn(data));
+  }
+}
+
+// Mängu sündmused
+interface Events {
+  'score:add': number;
+  'player:hit': { damage: number };
+  'enemy:die': { x: number; y: number; reward: number };
+  'level:up': { level: number };
+}
+
+const events = new EventEmitter&lt;Events&gt;();
+
+// UI kuulab skoori muutusi
+events.on('score:add', (points) => {
+  scoreDisplay.textContent = `Skoor: ${totalScore += points}`;
+});
+
+// Audio kuulab vaenlase surma
+events.on('enemy:die', (data) => {
+  audio.play('explosion');
+  spawnParticles(data.x, data.y);
+});
+
+// Mänguloogika emiteerib sündmusi
+function killEnemy(enemy: Enemy) {
+  enemy.destroy();
+  events.emit('enemy:die', {
+    x: enemy.pos.x, y: enemy.pos.y, reward: 10
+  });
+  events.emit('score:add', 10);
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏭 Samm 4 — Scene Manager</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">SceneManager.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface Scene {
+  name: string;
+  init?(data?: any): void;
+  update(dt: number): void;
+  draw(ctx: CanvasRenderingContext2D): void;
+  destroy?(): void;
+}
+
+class SceneManager {
+  private scenes = new Map&lt;string, Scene&gt;();
+  private stack: Scene[] = [];
+
+  register(scene: Scene): void {
+    this.scenes.set(scene.name, scene);
+  }
+
+  // Vaheta stseeni (eelmine kaob)
+  goto(name: string, data?: any): void {
+    const current = this.stack.pop();
+    if (current?.destroy) current.destroy();
+
+    const scene = this.scenes.get(name);
+    if (scene) {
+      if (scene.init) scene.init(data);
+      this.stack.push(scene);
+    }
+  }
+
+  // Lisa stseen peale (pause overlay)
+  push(name: string, data?: any): void {
+    const scene = this.scenes.get(name);
+    if (scene) {
+      if (scene.init) scene.init(data);
+      this.stack.push(scene);
+    }
+  }
+
+  // Eemalda ülemine stseen
+  pop(): void {
+    const scene = this.stack.pop();
+    if (scene?.destroy) scene.destroy();
+  }
+
+  update(dt: number): void {
+    // Ainult ülemine stseen saab update'i
+    const top = this.stack[this.stack.length - 1];
+    if (top) top.update(dt);
+  }
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    // Joonista kõik stseenid (alumised nähtavad pause ajal)
+    for (const scene of this.stack) {
+      scene.draw(ctx);
+    }
+  }
+}
+
+// const scenes = new SceneManager();
+// scenes.register(new MenuScene());
+// scenes.register(new GameScene());
+// scenes.register(new PauseScene());
+// scenes.goto('menu');
+// // Kui vajutad ESC:
+// scenes.push('pause');
+// // Kui jätkad:
+// scenes.pop();</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>State Machine vaenlasele</h4>
+              <p>Implementeeri StateMachine ja loo vaenlane kolme olekuga: Idle (seisab), Patrol (liigub edasi-tagasi), Chase (jälitab mängijat). Visualiseeri olek värviga.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>ECS süsteemiga mäng</h4>
+              <p>Ehita lihtne ECS — World, Entity, Component, System. Loo MovementSystem, RenderSystem, CollisionSystem. 50 entiteeti mis liiguvad ja põrkavad.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Observer sündmuste süsteem</h4>
+              <p>Ehita EventEmitter ja integreeri mängu: collision → sound + particles + score. Eraldi moodulid ei tea teineteisest — ainult sündmustest!</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Scene Manager</h4>
+              <p>Implementeeri SceneManager stack'iga. Loo 4 stseeni: Menu, Game, Pause (overlay), GameOver. Andmete edastamine stseenide vahel (skoor, tase).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Object Pool muster</h4>
+              <p>Implementeeri ObjectPool kuulide ja partiklite jaoks. Võrdlus: mõõda FPS 1000 partikli puhul pooliga ja ilma (new/destroy). Visualiseeri erinevus.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Kombineeri kõik mustrid</h4>
+              <p>Ehita väike mäng mis kasutab kõiki mustreid: ECS entiteetide jaoks, StateMachine AI-le, Observer sündmuste jaoks, SceneManager stseenidele, ObjectPool kuulidele.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../06b-typescript/index.html" class="btn btn-secondary">← Moodul 06b</a>
+        <a href="../07b-algoritmid/index.html" class="btn btn-primary">Moodul 07b: Algoritmid →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 05 · Phaser.js Mänguraamistik — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>05 · Phaser.js Mänguraamistik</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 05 · TASE 2 — EDASIJÕUDNUD</div>
+        <h1>🚀 Phaser.js Mänguraamistik</h1>
+        <p class="module-subtitle">Professionaalne 2D mängumootor brauseris. Sprite'id, füüsika, animatsioonid, stseenid, tilemap'id — kõik mida vajad täisväärtusliku mängu loomiseks!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~6-8 tundi</span>
+          <span class="meta-item">📝 8 harjutust</span>
+          <span class="meta-item">🟡 Edasijõudnud</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>📋 Eeldused</h2>
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div><p>Peaksid olema läbinud <a href="../03-esimene-mang/index.html">Moodul 03</a> ja mõistma mängutsüklit. Phaser teeb raskema töö sinu eest!</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>⚡ Samm 1 — Projekti Seadistamine</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Terminal — Phaser projekti algus</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># Loo uus projekt
+mkdir phaser-game && cd phaser-game
+npm init -y
+
+# Paigalda Phaser 3
+npm install phaser
+
+# Paigalda Vite arendusserveriks
+npm install -D vite
+
+# package.json skriptid:
+# "scripts": {
+#   "dev": "vite",
+#   "build": "vite build",
+#   "preview": "vite preview"
+# }</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">index.html</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="et"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Minu Phaser Mäng&lt;/title&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;script type="module" src="/src/main.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎮 Samm 2 — Phaser Konfiguratsioon ja Stseenid</h2>
+        <p>Phaser mäng koosneb <strong>stseenidest</strong> (Scenes). Iga stseen on eraldi "ekraan" — menüü, mängu tase, game over jne.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/main.js — Mängu algus</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import Phaser from 'phaser';
+import { BootScene } from './scenes/BootScene.js';
+import { MenuScene } from './scenes/MenuScene.js';
+import { GameScene } from './scenes/GameScene.js';
+import { GameOverScene } from './scenes/GameOverScene.js';
+
+const config = {
+  type: Phaser.AUTO,  // WebGL automaatselt, fallback Canvas
+  width: 800,
+  height: 600,
+  parent: 'game-container',
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 0 },
+      debug: false  // true = näita hitbox'e
+    }
+  },
+  scene: [BootScene, MenuScene, GameScene, GameOverScene]
+};
+
+const game = new Phaser.Game(config);</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📦 Samm 3 — Boot ja Preload</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/scenes/BootScene.js</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>export class BootScene extends Phaser.Scene {
+  constructor() {
+    super('BootScene');
+  }
+
+  preload() {
+    // Lae kõik varad (assets)
+    this.load.image('player', 'assets/player.png');
+    this.load.image('enemy', 'assets/enemy.png');
+    this.load.image('bullet', 'assets/bullet.png');
+    this.load.image('background', 'assets/bg.png');
+
+    // Spritesheet animatsioonideks
+    this.load.spritesheet('playerAnim', 'assets/player-sheet.png', {
+      frameWidth: 64,
+      frameHeight: 64
+    });
+
+    // Heli
+    this.load.audio('shoot', 'assets/audio/shoot.wav');
+    this.load.audio('explosion', 'assets/audio/explosion.wav');
+    this.load.audio('bgMusic', 'assets/audio/music.mp3');
+
+    // Laadimisriba
+    const bar = this.add.graphics();
+    this.load.on('progress', (value) => {
+      bar.clear();
+      bar.fillStyle(0x22c55e, 1);
+      bar.fillRect(200, 290, 400 * value, 20);
+    });
+  }
+
+  create() {
+    // Loo animatsioonid
+    this.anims.create({
+      key: 'playerIdle',
+      frames: this.anims.generateFrameNumbers('playerAnim', { start: 0, end: 3 }),
+      frameRate: 8,
+      repeat: -1  // -1 = lõpmatu kordus
+    });
+
+    this.anims.create({
+      key: 'playerRun',
+      frames: this.anims.generateFrameNumbers('playerAnim', { start: 4, end: 11 }),
+      frameRate: 12,
+      repeat: -1
+    });
+
+    this.scene.start('MenuScene');
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏃 Samm 4 — Mängustseen ja Mängija</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">src/scenes/GameScene.js</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>export class GameScene extends Phaser.Scene {
+  constructor() {
+    super('GameScene');
+    this.score = 0;
+  }
+
+  create() {
+    // Taust
+    this.add.image(400, 300, 'background');
+
+    // Mängija füüsikakehaga
+    this.player = this.physics.add.sprite(400, 500, 'player');
+    this.player.setCollideWorldBounds(true);
+
+    // Vaenlaste grupp (object pool!)
+    this.enemies = this.physics.add.group({
+      maxSize: 30,
+      classType: Phaser.Physics.Arcade.Sprite
+    });
+
+    // Kuulide grupp
+    this.bullets = this.physics.add.group({
+      maxSize: 20,
+      classType: Phaser.Physics.Arcade.Sprite
+    });
+
+    // Sisend
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.fireKey = this.input.keyboard.addKey('SPACE');
+
+    // Vaenlaste spawn timer
+    this.spawnTimer = this.time.addEvent({
+      delay: 1500,
+      callback: this.spawnEnemy,
+      callbackScope: this,
+      loop: true
+    });
+
+    // Kokkupõrke kontroll
+    this.physics.add.overlap(
+      this.bullets, this.enemies, this.hitEnemy, null, this
+    );
+    this.physics.add.overlap(
+      this.player, this.enemies, this.gameOver, null, this
+    );
+
+    // Skoori tekst
+    this.scoreText = this.add.text(16, 16, 'Skoor: 0', {
+      fontSize: '24px',
+      fontFamily: 'Inter',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    });
+  }
+
+  update(time, delta) {
+    // Mängija liikumine
+    const speed = 300;
+
+    if (this.cursors.left.isDown) {
+      this.player.setVelocityX(-speed);
+      this.player.anims.play('playerRun', true);
+      this.player.setFlipX(true);
+    } else if (this.cursors.right.isDown) {
+      this.player.setVelocityX(speed);
+      this.player.anims.play('playerRun', true);
+      this.player.setFlipX(false);
+    } else {
+      this.player.setVelocityX(0);
+      this.player.anims.play('playerIdle', true);
+    }
+
+    if (this.cursors.up.isDown) {
+      this.player.setVelocityY(-speed);
+    } else if (this.cursors.down.isDown) {
+      this.player.setVelocityY(speed);
+    } else {
+      this.player.setVelocityY(0);
+    }
+
+    // Tulistamine
+    if (Phaser.Input.Keyboard.JustDown(this.fireKey)) {
+      this.shoot();
+    }
+  }
+
+  shoot() {
+    const bullet = this.bullets.get(this.player.x, this.player.y - 20, 'bullet');
+    if (bullet) {
+      bullet.setActive(true).setVisible(true);
+      bullet.setVelocityY(-400);
+      this.sound.play('shoot', { volume: 0.3 });
+
+      // Hävita kuul kui läheb ekraanilt välja
+      this.time.delayedCall(2000, () => {
+        bullet.setActive(false).setVisible(false);
+        bullet.body.stop();
+      });
+    }
+  }
+
+  spawnEnemy() {
+    const x = Phaser.Math.Between(50, 750);
+    const enemy = this.enemies.get(x, -30, 'enemy');
+    if (enemy) {
+      enemy.setActive(true).setVisible(true);
+      enemy.setVelocityY(Phaser.Math.Between(100, 250));
+    }
+  }
+
+  hitEnemy(bullet, enemy) {
+    bullet.setActive(false).setVisible(false);
+    enemy.setActive(false).setVisible(false);
+    bullet.body.stop();
+    enemy.body.stop();
+
+    this.score += 10;
+    this.scoreText.setText('Skoor: ' + this.score);
+    this.sound.play('explosion', { volume: 0.5 });
+
+    // Partikliefekt (sisseehitatud!)
+    const particles = this.add.particles(enemy.x, enemy.y, 'bullet', {
+      speed: { min: 50, max: 200 },
+      scale: { start: 0.5, end: 0 },
+      lifespan: 500,
+      quantity: 15,
+      emitting: false
+    });
+    particles.explode();
+  }
+
+  gameOver() {
+    this.scene.start('GameOverScene', { score: this.score });
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🗺️ Samm 5 — Tilemap'id (Tiled)</h2>
+        <p>Tilemap võimaldab visuaalselt disainida mängu tasemeid <a href="https://www.mapeditor.org/" target="_blank">Tiled</a> editoriga.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Tilemap laadimine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// BootScene preload:
+this.load.tilemapTiledJSON('level1', 'assets/maps/level1.json');
+this.load.image('tiles', 'assets/maps/tileset.png');
+
+// GameScene create:
+const map = this.make.tilemap({ key: 'level1' });
+const tileset = map.addTilesetImage('tileset', 'tiles');
+
+// Kihid (Layers)
+const groundLayer = map.createLayer('Ground', tileset, 0, 0);
+const wallsLayer = map.createLayer('Walls', tileset, 0, 0);
+
+// Seina kiht blokeerib liikumist
+wallsLayer.setCollisionByProperty({ collides: true });
+this.physics.add.collider(this.player, wallsLayer);
+
+// Kaamera jälgib mängijat
+this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎬 Samm 6 — Tweens ja Efektid</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Phaser Tweens</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Hõljuv animatsioon
+this.tweens.add({
+  targets: coin,
+  y: coin.y - 10,
+  duration: 800,
+  ease: 'Sine.easeInOut',
+  yoyo: true,
+  repeat: -1
+});
+
+// Surma animatsioon
+this.tweens.add({
+  targets: enemy,
+  alpha: 0,
+  scale: 2,
+  angle: 360,
+  duration: 400,
+  onComplete: () => enemy.destroy()
+});
+
+// Ekraani raputus
+this.cameras.main.shake(200, 0.005);
+this.cameras.main.flash(100, 255, 0, 0);</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Seadista Phaser + Vite projekt</h4>
+              <p>Loo uus projekt <code>npm init</code> + Phaser 3 + Vite. Loo BootScene, MenuScene ja GameScene. Kontrolli et mäng käivitub brauseris.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Sprite liikumine ja animatsioon</h4>
+              <p>Lae spritesheet (nt <a href="https://kenney.nl" target="_blank">kenney.nl</a>), loo animatsioonid (idle, run, jump) ja juhi mängijat klaviatuuriga. Lisa <code>setCollideWorldBounds</code>.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Füüsikaobjektid ja kokkupõrked</h4>
+              <p>Loo grupp kukkuvaid objekte, lisa gravitatsioon. Mängija peab neid vältima. Lisa skoor ja elude süsteem. Kasuta <code>physics.add.overlap()</code>.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Tulistamismäng (Shooter)</h4>
+              <p>Loo top-down shooter: mängija tulistab kuule, vaenlased spawni'vad lainetes. Lisa object pooling (<code>group.maxSize</code>), partikliefektid ja heliefektid.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Platformer Tilemap'iga</h4>
+              <p>Loo platformer: disaini tase Tiled editoris, ekspordi JSON. Lae Phaser'isse, lisa kokkupõrked seintega. Mängija saab joosta ja hüpata.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Stseenide haldus</h4>
+              <p>Loo täielik mängutsükkel: Boot → Menu → Game → GameOver → Menu. Lisa andmete edastamine stseenide vahel (skoor). Lisa pause stseen.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="6" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Kaamera süsteem</h4>
+              <p>Loo suur maailm ja kaamera mis jälgib mängijat. Lisa "dead zone", parallax tausta kihid ja zoom efektid.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-05" data-index="7" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Tweens ja visuaalsed efektid</h4>
+              <p>Lisa mängule poleeritud efektid: mündi hõljumine tweeniga, surma animatsioon (fade + scale), ekraani shake tabamuse korral, flash efektid.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../04-git-syvitsi/index.html" class="btn btn-secondary">← Moodul 04</a>
+        <a href="../06-graafika-heli/index.html" class="btn btn-primary">Moodul 06: Graafika & Heli →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

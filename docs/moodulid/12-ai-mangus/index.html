@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 12 · AI Mängudes — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>12 · AI Mängudes</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 12 · TASE 5 — SPETSIALIST</div>
+        <h1>🤖 Tehisintellekt Mängudes</h1>
+        <p class="module-subtitle">Behavior Trees, Finite State Machines, GOAP, Utility AI, flocking — loo nutikad vaenlased ja NPC-d!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~8-10 tundi</span>
+          <span class="meta-item">📝 6 harjutust</span>
+          <span class="meta-item">🟣 Spetsialist</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🌳 Samm 1 — Behavior Tree (Käitumispuu)</h2>
+        <div class="callout callout-info">
+          <strong>ℹ️ Miks Behavior Tree?</strong>
+          <p>Behavior Trees on mängutööstuse standard NPC AI jaoks. Need on modulaarsed, taaskasutatavad ja visuaalselt loetavad. Kasutusel AAA mängudes nagu Halo, Unreal Engine jne.</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">behaviorTree.ts — Käitumispuu</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>type NodeStatus = 'success' | 'failure' | 'running';
+
+// Baasnood
+abstract class BTNode {
+  abstract tick(context: AIContext): NodeStatus;
+}
+
+// Kontekst (jagatud andmed)
+interface AIContext {
+  entity: Enemy;
+  target: Player | null;
+  deltaTime: number;
+  blackboard: Map&lt;string, any&gt;;
+}
+
+// ---- COMPOSITE NODES ----
+
+// Sequence: käivita järjest, esimesel failure'il peatu
+class Sequence extends BTNode {
+  constructor(private children: BTNode[]) { super(); }
+
+  tick(ctx: AIContext): NodeStatus {
+    for (const child of this.children) {
+      const status = child.tick(ctx);
+      if (status !== 'success') return status;
+    }
+    return 'success';
+  }
+}
+
+// Selector: proovi järjest, esimesel success'il peatu
+class Selector extends BTNode {
+  constructor(private children: BTNode[]) { super(); }
+
+  tick(ctx: AIContext): NodeStatus {
+    for (const child of this.children) {
+      const status = child.tick(ctx);
+      if (status !== 'failure') return status;
+    }
+    return 'failure';
+  }
+}
+
+// ---- DECORATOR NODES ----
+
+// Inverter: pöörab tulemuse
+class Inverter extends BTNode {
+  constructor(private child: BTNode) { super(); }
+
+  tick(ctx: AIContext): NodeStatus {
+    const status = this.child.tick(ctx);
+    if (status === 'success') return 'failure';
+    if (status === 'failure') return 'success';
+    return 'running';
+  }
+}
+
+// Repeater: korda N korda
+class Repeater extends BTNode {
+  private count = 0;
+  constructor(private child: BTNode, private times: number) { super(); }
+
+  tick(ctx: AIContext): NodeStatus {
+    if (this.count &lt; this.times) {
+      const status = this.child.tick(ctx);
+      if (status === 'success') this.count++;
+      return this.count >= this.times ? 'success' : 'running';
+    }
+    return 'success';
+  }
+}
+
+// ---- LEAF NODES (Tegevused ja tingimused) ----
+
+class IsTargetInRange extends BTNode {
+  constructor(private range: number) { super(); }
+
+  tick(ctx: AIContext): NodeStatus {
+    if (!ctx.target) return 'failure';
+    const dist = ctx.entity.position.distanceTo(ctx.target.position);
+    return dist &lt;= this.range ? 'success' : 'failure';
+  }
+}
+
+class MoveToTarget extends BTNode {
+  tick(ctx: AIContext): NodeStatus {
+    if (!ctx.target) return 'failure';
+    const dir = ctx.target.position.clone().sub(ctx.entity.position).normalize();
+    ctx.entity.position.add(dir.multiplyScalar(ctx.entity.speed * ctx.deltaTime));
+    const dist = ctx.entity.position.distanceTo(ctx.target.position);
+    return dist &lt; 1 ? 'success' : 'running';
+  }
+}
+
+class AttackTarget extends BTNode {
+  tick(ctx: AIContext): NodeStatus {
+    if (!ctx.target) return 'failure';
+    ctx.target.takeDamage(ctx.entity.attackDamage);
+    ctx.blackboard.set('lastAttackTime', Date.now());
+    return 'success';
+  }
+}
+
+class Patrol extends BTNode {
+  tick(ctx: AIContext): NodeStatus {
+    const waypoints = ctx.entity.patrolPoints;
+    const currentWP = ctx.blackboard.get('waypointIndex') ?? 0;
+    const target = waypoints[currentWP];
+    const dir = target.clone().sub(ctx.entity.position).normalize();
+    ctx.entity.position.add(dir.multiplyScalar(ctx.entity.speed * 0.5 * ctx.deltaTime));
+
+    if (ctx.entity.position.distanceTo(target) &lt; 0.5) {
+      ctx.blackboard.set('waypointIndex', (currentWP + 1) % waypoints.length);
+    }
+    return 'running';
+  }
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Käitumispuu koostamine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Vaenlase AI puu
+const enemyBT = new Selector([
+  // 1. Kui mängija lähedal → ründa!
+  new Sequence([
+    new IsTargetInRange(2),
+    new AttackTarget(),
+  ]),
+
+  // 2. Kui mängija nähtusel → jälita!
+  new Sequence([
+    new IsTargetInRange(15),
+    new MoveToTarget(),
+  ]),
+
+  // 3. Muidu → patrulli
+  new Patrol(),
+]);
+
+// Mängutsüklis:
+// enemyBT.tick(context);</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎯 Samm 2 — Utility AI (Kasulikkusel Põhinev)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">utilityAI.ts — Skooripõhine otsustamine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface AIAction {
+  name: string;
+  score(ctx: AIContext): number;  // 0..1
+  execute(ctx: AIContext): void;
+}
+
+class UtilityAI {
+  private actions: AIAction[] = [];
+
+  addAction(action: AIAction): void {
+    this.actions.push(action);
+  }
+
+  decide(ctx: AIContext): AIAction | null {
+    let bestAction: AIAction | null = null;
+    let bestScore = -Infinity;
+
+    for (const action of this.actions) {
+      const score = action.score(ctx);
+      if (score > bestScore) {
+        bestScore = score;
+        bestAction = action;
+      }
+    }
+    return bestAction;
+  }
+
+  update(ctx: AIContext): void {
+    const action = this.decide(ctx);
+    if (action) {
+      action.execute(ctx);
+    }
+  }
+}
+
+// Tegevused:
+const healAction: AIAction = {
+  name: 'heal',
+  score(ctx) {
+    const healthRatio = ctx.entity.hp / ctx.entity.maxHp;
+    if (healthRatio > 0.5) return 0;
+    return (1 - healthRatio) * 0.9; // Madal HP → kõrge skoor
+  },
+  execute(ctx) {
+    ctx.entity.heal(20);
+  }
+};
+
+const fleeAction: AIAction = {
+  name: 'flee',
+  score(ctx) {
+    if (!ctx.target) return 0;
+    const healthRatio = ctx.entity.hp / ctx.entity.maxHp;
+    const dist = ctx.entity.position.distanceTo(ctx.target.position);
+    return healthRatio &lt; 0.3 && dist &lt; 5 ? 0.95 : 0;
+  },
+  execute(ctx) {
+    if (!ctx.target) return;
+    const away = ctx.entity.position.clone().sub(ctx.target.position).normalize();
+    ctx.entity.position.add(away.multiplyScalar(ctx.entity.speed * ctx.deltaTime));
+  }
+};</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🐦 Samm 3 — Flocking (Parvealgoritm)</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">flocking.ts — Boid'id</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class Boid {
+  position: THREE.Vector2;
+  velocity: THREE.Vector2;
+  acceleration: THREE.Vector2 = new THREE.Vector2();
+
+  constructor(x: number, y: number) {
+    this.position = new THREE.Vector2(x, y);
+    this.velocity = new THREE.Vector2(Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(2);
+  }
+
+  // 3 põhireeglit:
+  flock(boids: Boid[]): void {
+    const separation = this.separate(boids).multiplyScalar(1.5);
+    const alignment = this.align(boids).multiplyScalar(1.0);
+    const cohesion = this.cohere(boids).multiplyScalar(1.0);
+
+    this.acceleration.add(separation).add(alignment).add(cohesion);
+  }
+
+  // 1. Separation — hoia distantsi
+  private separate(boids: Boid[], radius = 25): THREE.Vector2 {
+    const steer = new THREE.Vector2();
+    let count = 0;
+    for (const other of boids) {
+      const d = this.position.distanceTo(other.position);
+      if (d > 0 && d &lt; radius) {
+        const diff = this.position.clone().sub(other.position).normalize().divideScalar(d);
+        steer.add(diff);
+        count++;
+      }
+    }
+    if (count > 0) steer.divideScalar(count);
+    return steer;
+  }
+
+  // 2. Alignment — ühtlusta suund
+  private align(boids: Boid[], radius = 50): THREE.Vector2 {
+    const avg = new THREE.Vector2();
+    let count = 0;
+    for (const other of boids) {
+      if (this.position.distanceTo(other.position) &lt; radius) {
+        avg.add(other.velocity);
+        count++;
+      }
+    }
+    if (count > 0) avg.divideScalar(count).normalize().multiplyScalar(2).sub(this.velocity);
+    return avg;
+  }
+
+  // 3. Cohesion — liigu grupi keskele
+  private cohere(boids: Boid[], radius = 50): THREE.Vector2 {
+    const center = new THREE.Vector2();
+    let count = 0;
+    for (const other of boids) {
+      if (this.position.distanceTo(other.position) &lt; radius) {
+        center.add(other.position);
+        count++;
+      }
+    }
+    if (count > 0) {
+      center.divideScalar(count).sub(this.position).normalize().multiplyScalar(2).sub(this.velocity);
+    }
+    return center;
+  }
+
+  update(maxSpeed = 3): void {
+    this.velocity.add(this.acceleration);
+    this.velocity.clampLength(0, maxSpeed);
+    this.position.add(this.velocity);
+    this.acceleration.set(0, 0);
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-12" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Behavior Tree raamistik</h4>
+              <p>Loo BT: Sequence, Selector, Inverter, Repeater. Vaenlane: patrullib → märkab mängijat → jälitab → ründab. Visualiseeri puu debug HTML-is.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-12" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Utility AI süsteem</h4>
+              <p>5 tegevust: ründa, paranda, põgene, patrulli, kutsu abi. Iga tegevuse skoor sõltub HP-st, kaugusest ja liitlastest. Lisa slider'id testimiseks.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-12" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Flocking simulatsioon</h4>
+              <p>100 boid'i Canvas2D-s. Separation + alignment + cohesion. Lisa hiire tõmbejõud ja tõukejõud. Värvid sõltuvad kiirusest.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-12" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Stealth AI</h4>
+              <p>Vaenlased nägemis-koonusega (FOV). Mängija saab hiilida selja taga. Alert/Search/Patrol olekud. Helid meelitavad vaenlasi. Minimap.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-12" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>GOAP (Goal-Oriented Action Planning)</h4>
+              <p>Agent: eesmärk "tapa mängija" → plaan: "leia relv → laadi → lähene → tulista". Dünaamiline planeerimine. Lisa uus eesmärk "jää ellu".</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-12" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Boss AI</h4>
+              <p>Bossivaenlase AI 3 faasiga. Faas 1: lihtsad rünnakud. Faas 2 (HP &lt; 60%): uued rünnakumustrid. Faas 3 (HP &lt; 30%): kiire + ohtlik. Enrage timer.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../11b-3d-mudelid/index.html" class="btn btn-secondary">← Moodul 11b</a>
+        <a href="../13-ai-arendus/index.html" class="btn btn-primary">Moodul 13: AI Arendus →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

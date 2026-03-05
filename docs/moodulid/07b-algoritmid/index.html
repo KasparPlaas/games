@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 07b · Algoritmid Mängudes — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>07b · Algoritmid Mängudes</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size:0.85rem;">MOODUL 07b · TASE 3 — KESKMINE</div>
+        <h1>🧮 Algoritmid Mängudes</h1>
+        <p class="module-subtitle">A* teeleidmine, spatial hashing, quad tree, collision broadphase — algoritmid mis muudavad mängu kiireks ja targaks.</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~5-6 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🟠 Keskmine</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🗺️ Samm 1 — A* Teeleidmine</h2>
+        <p>A* on kõige populaarsem teeleidmise algoritm mängudes. Leiab lühima tee kahe punkti vahel, arvestades takistusi.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">astar.ts — A* implementatsioon</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface Node {
+  x: number;
+  y: number;
+  g: number;  // Tegelik kulu algusest
+  h: number;  // Heuristiline kulu lõpuni
+  f: number;  // g + h
+  parent: Node | null;
+  walkable: boolean;
+}
+
+class AStar {
+  private grid: Node[][];
+  private cols: number;
+  private rows: number;
+
+  constructor(walkableMap: boolean[][]) {
+    this.rows = walkableMap.length;
+    this.cols = walkableMap[0].length;
+    this.grid = walkableMap.map((row, y) =>
+      row.map((walkable, x) => ({
+        x, y, g: 0, h: 0, f: 0, parent: null, walkable
+      }))
+    );
+  }
+
+  // Manhattan kaugus (4 suunda)
+  private heuristic(a: Node, b: Node): number {
+    return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  }
+
+  // Naabrid (4 suunda + 4 diagonaali)
+  private getNeighbors(node: Node): Node[] {
+    const dirs = [
+      [0, -1], [0, 1], [-1, 0], [1, 0],   // Üles, alla, vasak, parem
+      [-1,-1], [1,-1], [-1, 1], [1, 1]     // Diagonaalid
+    ];
+    const neighbors: Node[] = [];
+
+    for (const [dx, dy] of dirs) {
+      const nx = node.x + dx;
+      const ny = node.y + dy;
+      if (nx >= 0 && nx < this.cols && ny >= 0 && ny < this.rows) {
+        if (this.grid[ny][nx].walkable) {
+          neighbors.push(this.grid[ny][nx]);
+        }
+      }
+    }
+    return neighbors;
+  }
+
+  findPath(startX: number, startY: number, endX: number, endY: number): {x: number, y: number}[] {
+    // Reset grid
+    for (const row of this.grid) {
+      for (const node of row) {
+        node.g = 0; node.h = 0; node.f = 0; node.parent = null;
+      }
+    }
+
+    const start = this.grid[startY][startX];
+    const end = this.grid[endY][endX];
+    const openSet: Node[] = [start];
+    const closedSet = new Set&lt;Node&gt;();
+
+    while (openSet.length > 0) {
+      // Leia väiksima f-väärtusega sõlm
+      let current = openSet[0];
+      let lowestIndex = 0;
+      for (let i = 1; i < openSet.length; i++) {
+        if (openSet[i].f < current.f) {
+          current = openSet[i];
+          lowestIndex = i;
+        }
+      }
+
+      // Leidsime lõppu!
+      if (current === end) {
+        return this.reconstructPath(current);
+      }
+
+      openSet.splice(lowestIndex, 1);
+      closedSet.add(current);
+
+      for (const neighbor of this.getNeighbors(current)) {
+        if (closedSet.has(neighbor)) continue;
+
+        const isDiagonal = neighbor.x !== current.x && neighbor.y !== current.y;
+        const tentativeG = current.g + (isDiagonal ? 1.414 : 1);
+
+        const inOpen = openSet.includes(neighbor);
+        if (!inOpen || tentativeG < neighbor.g) {
+          neighbor.g = tentativeG;
+          neighbor.h = this.heuristic(neighbor, end);
+          neighbor.f = neighbor.g + neighbor.h;
+          neighbor.parent = current;
+
+          if (!inOpen) openSet.push(neighbor);
+        }
+      }
+    }
+
+    return []; // Teed ei leitud
+  }
+
+  private reconstructPath(node: Node): {x: number, y: number}[] {
+    const path: {x: number, y: number}[] = [];
+    let current: Node | null = node;
+    while (current) {
+      path.unshift({ x: current.x, y: current.y });
+      current = current.parent;
+    }
+    return path;
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📦 Samm 2 — Spatial Hashing</h2>
+        <p>Kokkupõrgete kontroll on O(n²) — iga objekt vs iga teine. Spatial hash jagab maailma ruutudeks ja kontrollib ainult samas ruudus olevaid objekte.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">spatialHash.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class SpatialHash&lt;T extends { x: number; y: number; width: number; height: number }&gt; {
+  private cellSize: number;
+  private cells = new Map&lt;string, Set&lt;T&gt;&gt;();
+
+  constructor(cellSize: number = 64) {
+    this.cellSize = cellSize;
+  }
+
+  private key(cx: number, cy: number): string {
+    return `${cx},${cy}`;
+  }
+
+  clear(): void {
+    this.cells.clear();
+  }
+
+  insert(obj: T): void {
+    const minCX = Math.floor(obj.x / this.cellSize);
+    const minCY = Math.floor(obj.y / this.cellSize);
+    const maxCX = Math.floor((obj.x + obj.width) / this.cellSize);
+    const maxCY = Math.floor((obj.y + obj.height) / this.cellSize);
+
+    for (let cx = minCX; cx <= maxCX; cx++) {
+      for (let cy = minCY; cy <= maxCY; cy++) {
+        const k = this.key(cx, cy);
+        if (!this.cells.has(k)) this.cells.set(k, new Set());
+        this.cells.get(k)!.add(obj);
+      }
+    }
+  }
+
+  // Leia potentsiaalsed kokkupõrked (broadphase)
+  query(obj: T): Set&lt;T&gt; {
+    const result = new Set&lt;T&gt;();
+    const minCX = Math.floor(obj.x / this.cellSize);
+    const minCY = Math.floor(obj.y / this.cellSize);
+    const maxCX = Math.floor((obj.x + obj.width) / this.cellSize);
+    const maxCY = Math.floor((obj.y + obj.height) / this.cellSize);
+
+    for (let cx = minCX; cx <= maxCX; cx++) {
+      for (let cy = minCY; cy <= maxCY; cy++) {
+        const cell = this.cells.get(this.key(cx, cy));
+        if (cell) {
+          for (const other of cell) {
+            if (other !== obj) result.add(other);
+          }
+        }
+      }
+    }
+    return result;
+  }
+}
+
+// 1000 objekti — ilma: 1000×1000 = 1M kontrolli
+// Spatial hashiga: ainult lähedalasuvad — ~5000 kontrolli!</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🌳 Samm 3 — QuadTree</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">quadtree.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface Rect {
+  x: number; y: number; width: number; height: number;
+}
+
+class QuadTree&lt;T extends Rect&gt; {
+  private objects: T[] = [];
+  private children: QuadTree&lt;T&gt;[] | null = null;
+  private maxObjects = 10;
+  private maxDepth = 5;
+  private depth: number;
+  private bounds: Rect;
+
+  constructor(bounds: Rect, depth = 0) {
+    this.bounds = bounds;
+    this.depth = depth;
+  }
+
+  clear(): void {
+    this.objects = [];
+    this.children = null;
+  }
+
+  private split(): void {
+    const { x, y, width, height } = this.bounds;
+    const hw = width / 2, hh = height / 2;
+    const d = this.depth + 1;
+    this.children = [
+      new QuadTree({ x, y, width: hw, height: hh }, d),
+      new QuadTree({ x: x + hw, y, width: hw, height: hh }, d),
+      new QuadTree({ x, y: y + hh, width: hw, height: hh }, d),
+      new QuadTree({ x: x + hw, y: y + hh, width: hw, height: hh }, d),
+    ];
+  }
+
+  insert(obj: T): void {
+    if (this.children) {
+      for (const child of this.children) {
+        if (this.intersects(obj, child.bounds)) {
+          child.insert(obj);
+        }
+      }
+      return;
+    }
+
+    this.objects.push(obj);
+
+    if (this.objects.length > this.maxObjects && this.depth < this.maxDepth) {
+      this.split();
+      for (const o of this.objects) {
+        for (const child of this.children!) {
+          if (this.intersects(o, child.bounds)) child.insert(o);
+        }
+      }
+      this.objects = [];
+    }
+  }
+
+  query(range: Rect): T[] {
+    const found: T[] = [];
+    if (!this.intersects(range, this.bounds)) return found;
+
+    for (const obj of this.objects) {
+      if (this.intersects(obj, range)) found.push(obj);
+    }
+
+    if (this.children) {
+      for (const child of this.children) {
+        found.push(...child.query(range));
+      }
+    }
+    return found;
+  }
+
+  private intersects(a: Rect, b: Rect): boolean {
+    return a.x < b.x + b.width && a.x + a.width > b.x &&
+           a.y < b.y + b.height && a.y + a.height > b.y;
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07b" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>A* teeleidmine visualisatsioon</h4>
+              <p>Implementeeri A* ja visualiseeri: joonista grid, kliki algus ja lõpppunkt, näita avatud/suletud sõlmid erinevate värvidega, leitud tee joone/värviga. Lisa takistuste joonistamine.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07b" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Vaenlased kasutavad A*-i</h4>
+              <p>Loo mäng kus vaenlased liiguvad A* abil mängija poole, vältides seinu. Tee ümberarvutub kui mängija liigub. Lisa sujuv tee jälgimine (path smoothing).</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07b" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Spatial Hash kokkupõrgete kontroll</h4>
+              <p>Loo 500 liikuvat objekti ja tuvasta kokkupõrked spatial hashiga. Kuva FPS ja kokkupõrgete kontrollide arv. Võrdle brute-force vs spatial hash.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07b" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>QuadTree visualisatsioon</h4>
+              <p>Loo QuadTree ja visualiseeri selle jagamine: joonista piirid, näita kuidas puu jagab ruumi objektide lisamisel. Hiire päring näitab ainult lähemaid objekte.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-07b" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Jõudluse võrdlus</h4>
+              <p>Loo benchmark: 100, 500, 1000, 5000 objekti. Mõõda kokkupõrkekontrolli aeg brute-force, spatial hash ja QuadTree puhul. Kuva tulemused graafikuna.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../07-arhitektuur/index.html" class="btn btn-secondary">← Moodul 07</a>
+        <a href="../08-cicd/index.html" class="btn btn-primary">Moodul 08: CI/CD →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

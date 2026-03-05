@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 06 · Graafika, Animatsioonid &amp; Heli — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>06 · Graafika, Animatsioonid &amp; Heli</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 06 · TASE 2 — EDASIJÕUDNUD</div>
+        <h1>🎨 Graafika, Animatsioonid &amp; Heli</h1>
+        <p class="module-subtitle">Sprite sheet'id, piksel-kunst, helidisain, muusika — kõik mis annab mängule elu ja atmosfääri.</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~5-6 tundi</span>
+          <span class="meta-item">📝 6 harjutust</span>
+          <span class="meta-item">🟡 Edasijõudnud</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🖼️ Samm 1 — Sprite Sheet'ide Loomine</h2>
+        <p>Sprite sheet on pilt mis sisaldab mitu "kaadrit" animatsioonist reas.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div><p><strong>Tasuta tööriistad:</strong> <a href="https://www.aseprite.org/" target="_blank">Aseprite</a> (tasuline, kuid parim), <a href="https://www.piskelapp.com/" target="_blank">Piskel</a> (tasuta, brauseris), <a href="https://www.pixilart.com/" target="_blank">Pixilart</a> (tasuta, brauseris). Tasuta varad: <a href="https://kenney.nl" target="_blank">kenney.nl</a>, <a href="https://itch.io/game-assets/free" target="_blank">itch.io</a></p></div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">sprite.js — Spritesheet laadimine ja animatsioon</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class SpriteSheet {
+  constructor(image, frameWidth, frameHeight) {
+    this.image = image;
+    this.frameWidth = frameWidth;
+    this.frameHeight = frameHeight;
+    this.columns = Math.floor(image.width / frameWidth);
+    this.rows = Math.floor(image.height / frameHeight);
+    this.totalFrames = this.columns * this.rows;
+  }
+
+  drawFrame(ctx, frameIndex, x, y, scale = 1) {
+    const col = frameIndex % this.columns;
+    const row = Math.floor(frameIndex / this.columns);
+
+    ctx.drawImage(
+      this.image,
+      col * this.frameWidth,    // Source X
+      row * this.frameHeight,   // Source Y
+      this.frameWidth,          // Source W
+      this.frameHeight,         // Source H
+      x, y,                     // Destination X, Y
+      this.frameWidth * scale,  // Destination W
+      this.frameHeight * scale  // Destination H
+    );
+  }
+}
+
+class Animation {
+  constructor(spriteSheet, frames, frameRate = 10, loop = true) {
+    this.spriteSheet = spriteSheet;
+    this.frames = frames;        // [0, 1, 2, 3] frame indeksid
+    this.frameRate = frameRate;
+    this.loop = loop;
+    this.currentFrame = 0;
+    this.timer = 0;
+    this.finished = false;
+  }
+
+  update(deltaTime) {
+    if (this.finished) return;
+    this.timer += deltaTime;
+    const frameDuration = 1000 / this.frameRate;
+
+    if (this.timer >= frameDuration) {
+      this.timer -= frameDuration;
+      this.currentFrame++;
+
+      if (this.currentFrame >= this.frames.length) {
+        if (this.loop) {
+          this.currentFrame = 0;
+        } else {
+          this.currentFrame = this.frames.length - 1;
+          this.finished = true;
+        }
+      }
+    }
+  }
+
+  draw(ctx, x, y, scale = 1) {
+    const frameIndex = this.frames[this.currentFrame];
+    this.spriteSheet.drawFrame(ctx, frameIndex, x, y, scale);
+  }
+
+  reset() {
+    this.currentFrame = 0;
+    this.timer = 0;
+    this.finished = false;
+  }
+}
+
+// Kasutamine:
+// const sheet = new SpriteSheet(playerImage, 64, 64);
+// const idleAnim = new Animation(sheet, [0, 1, 2, 3], 8);
+// const runAnim = new Animation(sheet, [4, 5, 6, 7, 8, 9, 10, 11], 12);</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🏃 Samm 2 — Animatsioonide Haldur</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">animator.js</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class Animator {
+  constructor() {
+    this.animations = new Map();
+    this.currentAnim = null;
+    this.currentKey = '';
+    this.flipX = false;
+  }
+
+  add(key, animation) {
+    this.animations.set(key, animation);
+    if (!this.currentAnim) this.play(key);
+  }
+
+  play(key) {
+    if (this.currentKey === key) return;
+    this.currentKey = key;
+    this.currentAnim = this.animations.get(key);
+    if (this.currentAnim) this.currentAnim.reset();
+  }
+
+  update(deltaTime) {
+    if (this.currentAnim) this.currentAnim.update(deltaTime);
+  }
+
+  draw(ctx, x, y, scale = 1) {
+    if (!this.currentAnim) return;
+    ctx.save();
+    if (this.flipX) {
+      ctx.translate(x + this.currentAnim.spriteSheet.frameWidth * scale, y);
+      ctx.scale(-1, 1);
+      this.currentAnim.draw(ctx, 0, 0, scale);
+    } else {
+      this.currentAnim.draw(ctx, x, y, scale);
+    }
+    ctx.restore();
+  }
+}
+
+// Kasutamine:
+// const animator = new Animator();
+// animator.add('idle', idleAnim);
+// animator.add('run', runAnim);
+// animator.add('jump', jumpAnim);
+//
+// if (velocity.x !== 0) animator.play('run');
+// else animator.play('idle');
+// animator.flipX = velocity.x < 0;</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎵 Samm 3 — Web Audio API</h2>
+        <p>Web Audio API annab täieliku kontrolli heli üle — helitugevus, pitch, 3D positsioneerimine, efektid.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">audio.js — Helisüsteem</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class AudioManager {
+  constructor() {
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.sounds = new Map();
+    this.musicGain = this.ctx.createGain();
+    this.sfxGain = this.ctx.createGain();
+    this.masterGain = this.ctx.createGain();
+
+    // Helipuu: sounds → sfxGain → masterGain → output
+    this.sfxGain.connect(this.masterGain);
+    this.musicGain.connect(this.masterGain);
+    this.masterGain.connect(this.ctx.destination);
+
+    this.musicGain.gain.value = 0.3;
+    this.sfxGain.gain.value = 0.7;
+    this.currentMusic = null;
+  }
+
+  async load(key, url) {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+    this.sounds.set(key, audioBuffer);
+  }
+
+  play(key, options = {}) {
+    const buffer = this.sounds.get(key);
+    if (!buffer) return;
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+
+    // Pitch muutmine
+    if (options.pitch) {
+      source.playbackRate.value = options.pitch;
+    }
+
+    // Juhuslik pitch variatsioon (et ei kõlaks monotoonselt)
+    if (options.pitchVariation) {
+      const variation = 1 + (Math.random() - 0.5) * options.pitchVariation;
+      source.playbackRate.value *= variation;
+    }
+
+    source.connect(this.sfxGain);
+    source.start(0);
+    return source;
+  }
+
+  playMusic(key, loop = true) {
+    if (this.currentMusic) this.currentMusic.stop();
+
+    const buffer = this.sounds.get(key);
+    if (!buffer) return;
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = loop;
+    source.connect(this.musicGain);
+    source.start(0);
+    this.currentMusic = source;
+  }
+
+  // Sujuv helitugevuse muutmine
+  fadeMusic(targetVolume, duration = 1) {
+    this.musicGain.gain.linearRampToValueAtTime(
+      targetVolume, this.ctx.currentTime + duration
+    );
+  }
+
+  // Vajalik kasutaja interaktsiooni järel
+  resume() {
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+}
+
+// Kasutamine:
+// const audio = new AudioManager();
+// await audio.load('shoot', '/assets/audio/shoot.wav');
+// await audio.load('bgMusic', '/assets/audio/music.mp3');
+// audio.play('shoot', { pitchVariation: 0.2 });
+// audio.playMusic('bgMusic');</code></pre>
+        </div>
+
+        <div class="callout warning">
+          <span class="callout-icon">⚠️</span>
+          <div><p><strong>Brauseri piirang:</strong> Heli ei saa mängida enne kasutaja interaktsiooni (klikk/klahv). Kutsu <code>audio.resume()</code> esimese interaktsiooni järel!</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎶 Samm 4 — Protseduurilised Heliefektid</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">sfx.js — Heliefektide genereerimine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class SFXGenerator {
+  constructor(audioCtx) {
+    this.ctx = audioCtx;
+  }
+
+  // Laseriheli
+  laser() {
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(1000, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.2);
+
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+
+    osc.connect(gain).connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.2);
+  }
+
+  // Plahvatusheli
+  explosion() {
+    const bufferSize = this.ctx.sampleRate * 0.5;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2000, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.5);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+
+    source.connect(filter).connect(gain).connect(this.ctx.destination);
+    source.start();
+  }
+
+  // Mündi kogumine
+  coin() {
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587, this.ctx.currentTime);         // D5
+    osc.frequency.setValueAtTime(880, this.ctx.currentTime + 0.08);  // A5
+
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+
+    osc.connect(gain).connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.3);
+  }
+}
+
+// const sfx = new SFXGenerator(audio.ctx);
+// sfx.laser();
+// sfx.explosion();
+// sfx.coin();</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🖌️ Samm 5 — Piksel-kunsti Põhitõed</h2>
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>
+            <p><strong>Piksel-kunsti reeglid:</strong></p>
+            <ul>
+              <li>Kasuta piiratud värvipalli (8-16 värvi)</li>
+              <li>Tööta väikses suuruses (16×16, 32×32, 64×64)</li>
+              <li>Ära kasuta anti-aliasing'ut — iga piksel on tahtlik</li>
+              <li>Loo esmalt siluett, siis detailid</li>
+              <li>Piirjooned: tumedad (ei pea olema must)</li>
+              <li>Valgus peab tulema ühest suunast</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Canvas pixel-perfect renderdamine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Pixel-perfect Canvas seadistus
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// KRIITILINE — lülita interpolatsioon välja!
+ctx.imageSmoothingEnabled = false;
+// CSS-is ka:
+// canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+// Tööta väikesel Canvasil ja suurenda CSS-iga
+canvas.width = 320;   // Mängu loogiline suurus
+canvas.height = 240;
+canvas.style.width = '960px';  // 3x suurendus
+canvas.style.height = '720px';</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Sprite Sheet animatsioon</h4>
+              <p>Loo SpriteSheet ja Animation klass. Lae tasuta spritesheet (kenney.nl), loo animatsioonid idle, run ja attack. Juhib klaviatuuriga.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Animatsioonide haldur</h4>
+              <p>Loo Animator klass mis haldab mitu animatsiooni. Lisa flip (peegeldamine) ja automaatne animatsiooni valik (idle/run/jump) vastavalt olekule.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Helisüsteemi ehitamine</h4>
+              <p>Ehita AudioManager Web Audio API-ga. Lae kolm heliefekti + üks taustamuusika. Lisa helitugevuse kontroll, mute nupp ja fade efektid.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Protseduurilised heliefektid</h4>
+              <p>Genereeri Web Audio oscillator'itega: laserilask, plahvatus, mündi kogumine, hüppamine, menu hover. Loo SFXGenerator klass.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Piksel-kunsti mängija</h4>
+              <p>Joonista Piskel'is 32×32 mängija tegelane: idle (4 kaadrit), run (6 kaadrit). Ekspordi PNG spritesheet. Integreeri mängu.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-06" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Täielik audiovisuaalne demo</h4>
+              <p>Kombineeri kõik: animeeritud mängija + heliefektid + taustamuusika + partiklid. Loo väike interaktiivne demo kus kõik elemendid töötavad koos.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../05-phaser/index.html" class="btn btn-secondary">← Moodul 05</a>
+        <a href="../06b-typescript/index.html" class="btn btn-primary">Moodul 06b: TypeScript →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

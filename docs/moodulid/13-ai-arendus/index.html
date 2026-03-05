@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 13 · AI-Toega Arendus — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>13 · AI-Toega Arendus</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 13 · TASE 5 — SPETSIALIST</div>
+        <h1>🧠 AI-Toega Mänguarendus</h1>
+        <p class="module-subtitle">GitHub Copilot, ChatGPT, prompt engineering, AI-genereeritud sisu, koodi genereerimine ja refaktoreerimine.</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~5-7 tundi</span>
+          <span class="meta-item">📝 6 harjutust</span>
+          <span class="meta-item">🟣 Spetsialist</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🤖 Samm 1 — GitHub Copilot Efektiivne Kasutamine</h2>
+        <div class="callout callout-tip">
+          <strong>💡 Copiloti parimad praktikad</strong>
+          <ul>
+            <li>Kirjuta alati <strong>selge kommentaar enne koodi</strong> — Copilot kasutab seda kontekstina</li>
+            <li>Lisa <strong>tüübi annotatsioone</strong> (TypeScript) — paremad soovitused</li>
+            <li>Ava <strong>seotud failid</strong> kõrvaltabidesse — Copilot loeb neid</li>
+            <li>Kasuta <strong>Tab</strong> aktseptimiseks, <strong>Esc</strong> tagasilükkamiseks, <strong>Alt+]</strong> alternatiivide vaatamiseks</li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Näide — Kommentaar-juhitud genereerimine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Loo partiklisüsteem mis emiteerib ringikujuliselt
+// Partiklid liiguvad väljapoole, kaotavad läbipaistvust
+// ja vähenevad suuruses. Max 200 partiklit.
+
+class CircleEmitter {
+  particles: Particle[] = [];
+  maxParticles = 200;
+  emitRate = 30; // partiklit sekundis
+  
+  // Copilot genereerib ülejäänud koodi...
+  emit(x: number, y: number, delta: number): void {
+    const count = Math.floor(this.emitRate * delta);
+    for (let i = 0; i &lt; count && this.particles.length &lt; this.maxParticles; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 50 + Math.random() * 100;
+      this.particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        size: 4 + Math.random() * 4,
+      });
+    }
+  }
+  
+  update(delta: number): void {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.x += p.vx * delta;
+      p.y += p.vy * delta;
+      p.life -= delta;
+      p.size *= 0.99;
+      if (p.life &lt;= 0) this.particles.splice(i, 1);
+    }
+  }
+}
+
+// 🔑 Oluline: Copilot pakkus kogu emit() ja update()
+// põhinedes ainult kommentaarile!</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>💬 Samm 2 — Prompt Engineering Mänguarenduses</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Efektiivsed promptid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ==========================================
+// HALB PROMPT:
+// "Tee mulle mäng"
+//
+// HEA PROMPT:
+// "Loo TypeScript klass EnemySpawner:
+//  - Spawn'ib vaenlasi wave'idena (laine 1: 5 vaenlast, laine 2: 8, jne)
+//  - Iga wave vahel 10s paus
+//  - Vaenlaste tüübid: Grunt (HP:50), Tank (HP:150), Fast (HP:30, speed:2x)
+//  - Spawn positsioonid: ekraani servadest
+//  - Event: onWaveStart(waveNumber), onWaveComplete(), onAllWavesComplete()
+//  - Kasuta EventEmitter mustrit
+//  - Koodi kommentaarid eesti keeles"
+// ==========================================
+
+// KONTEKSTI ANDMINE:
+// "Minu projektis on järgmine struktuur:
+//  - Entity klass (position, update, render)
+//  - GameLoop klass (entities[], addEntity, removeEntity)  
+//  - Vector2 klass (add, sub, normalize, scale)
+//  Loo Projectile klass mis laiendab Entity-t..."
+
+// ITERATIIVNE TÄIENDAMINE:
+// 1. "Loo põhi Inventory klass"
+// 2. "Lisa stackable items tugi (max stack: 99)"
+// 3. "Lisa drag & drop HTML5 API-ga"
+// 4. "Lisa tooltip mis näitab item stat'e"
+// 5. "Optimeeri: kasuta Object Pool'i"</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🎨 Samm 3 — AI Sisu Genereerimine</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">aiContent.ts — Protseduurne tekst ja dialoogid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Mängu dialogide genereerimine API kaudu
+async function generateNPCDialog(
+  npcName: string,
+  personality: string,
+  context: string
+): Promise&lt;string&gt; {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `Sa oled NPC nimega ${npcName}. 
+            Iseloom: ${personality}. 
+            Räägi lühidalt (max 2 lauset). 
+            Kontekst: fantaasia-RPG maailm.`,
+        },
+        { role: 'user', content: context },
+      ],
+      max_tokens: 100,
+      temperature: 0.8,
+    }),
+  });
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+// Item kirjelduste genereerimine
+async function generateItemDescription(
+  itemName: string,
+  itemType: string,
+  rarity: string
+): Promise&lt;string&gt; {
+  // Kasuta cache'i et mitte iga kord API-t kutsuda
+  const cacheKey = `item_${itemName}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) return cached;
+
+  const desc = await generateNPCDialog(
+    'Narrator',
+    'poeetiline jutustaja',
+    `Kirjelda eset: ${itemName} (${itemType}, ${rarity})`
+  );
+  
+  localStorage.setItem(cacheKey, desc);
+  return desc;
+}
+
+// NB! Ära kasuta API kutseid reaalajas mängu ajal!
+// Genereeri sisu eelnevalt ja cache'ita.</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+          <strong>⚠️ AI API kulude kontroll</strong>
+          <p>API kutsed maksavad raha! Strateegia: genereeri sisu <strong>arenduse ajal</strong> ja salvesta JSON-failidesse. Mängu käivitudes laadi staatiliselt.</p>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🔧 Samm 4 — Copilot Chat Mänguarenduses</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Copilot Chat näited</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// VS Code'is: Ctrl+I (inline chat) või Ctrl+Shift+I (chat panel)
+
+// ---- KOODISELETUS ----
+// Vali kood → "Selgita seda koodi"
+// → Copilot annab detailse selgituse
+
+// ---- BUGIDE LEIDMINE ----
+// Vali kood → "Leia bugid selles koodis"
+// → Copilot tuvastab potentsiaalsed probleemid
+
+// ---- REFAKTOREERIMINE ----
+// Vali kood → "/fix optimeeri see game loop"
+// → Copilot pakub refaktoreeritud versiooni
+
+// ---- TESTID ----
+// Vali kood → "/tests loo unit testid"
+// → Copilot genereerib Vitest testid
+
+// ---- DOKUMENTATSIOON ----
+// Vali kood → "/doc lisa JSDoc kommentaarid"
+// → Copilot lisab JSDoc annotatsioonid
+
+// ---- MÄNGU-SPETSIIFILISED ----
+// "Kuidas implementeerida A* pathfinding TypeScriptis?"
+// "Optimeeri see collision detection O(n²) → O(n log n)"
+// "Loo shader mis teeb water ripple efekti"
+// "Kuidas lisada gamepad tugi HTML5 Gamepad API-ga?"</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-13" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Copilot kommentaar-juhtimine</h4>
+              <p>Kirjuta 10 detailset kommentaari ja lase Copilotil genereerida kood. Hinda tulemusi: mitu oli kohe kasutatavad? Mis vajasid parandusi?</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-13" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Prompt Engineering harjutus</h4>
+              <p>Loo EnemySpawner wave-süsteem ainult promptidega. Alusta lihtsast → lisa keerukust iteratiivselt. Dokumenteeri iga prompt ja tulemus.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-13" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>AI-genereeritud mängu sisu</h4>
+              <p>Genereeri 20 item'i nimed, kirjeldused ja stat'id. Salvesta JSON-faili. Laadi JSON mängu ja kuva inventaris. Loo ka quest kirjeldused.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-13" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Koodiülevaatus AI-ga</h4>
+              <p>Võta oma vana mängukood → lase AI-l analüüsida (bugid, optimeerimised, turvaaugud). Rakenda parandused. Enne/pärast FPS võrdlus.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-13" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Testide genereerimine</h4>
+              <p>Vali 5 mängufunktsiooni → genereeri igale unit testid AI-ga. Käivita Vitest. Paranda testid mis ei lähe läbi. Saavuta 80%+ katvus.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-13" data-index="5" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>AI + protseduurne genereerimine</h4>
+              <p>Kombineeri AI-genereeritud JSON (seiklus-sündmused) + protseduurne dungeon. Iga ruum saab unikaalse AI-kirjelduse. Cache tulemused.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../12-ai-mangus/index.html" class="btn btn-secondary">← Moodul 12</a>
+        <a href="../14-optimeerimine/index.html" class="btn btn-primary">Moodul 14: Optimeerimine →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

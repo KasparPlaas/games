@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 14b · Turvalisus — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>14b · Turvalisus</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number">MOODUL 14b · TASE 5 — SPETSIALIST</div>
+        <h1>🔒 Mängu Turvalisus</h1>
+        <p class="module-subtitle">Serveri-poolne valideerimine, anti-cheat, andmekaitse, XSS/CSRF, turvaline WebSocket — kaitse oma mängu!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~5-7 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🟣 Spetsialist</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🛡️ Samm 1 — Serveri-poolne Valideerimine</h2>
+        <div class="callout callout-danger">
+          <strong>🚨 Kuldreegel: Ära usalda klienti!</strong>
+          <p>Kõik, mis tuleb kliendilt, võib olla võltsitud. Klient saadab <strong>sisendi</strong> (klahvivajutused), server arvutab <strong>tulemuse</strong> (positsioon, HP, skoor).</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">serverValidation.ts — Serveri kontrollid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ======= SERVER (Node.js + Express) =======
+
+interface PlayerState {
+  id: string;
+  x: number;
+  y: number;
+  hp: number;
+  score: number;
+  lastMoveTime: number;
+  speed: number; // max lubatud kiirus
+}
+
+class GameServer {
+  private players: Map&lt;string, PlayerState&gt; = new Map();
+
+  handleMove(playerId: string, input: { dx: number; dy: number }): void {
+    const player = this.players.get(playerId);
+    if (!player) return;
+
+    const now = Date.now();
+    const delta = (now - player.lastMoveTime) / 1000;
+    player.lastMoveTime = now;
+
+    // ✅ Valideeri sisend
+    const dx = Math.max(-1, Math.min(1, input.dx)); // Clamp -1..1
+    const dy = Math.max(-1, Math.min(1, input.dy));
+
+    // ✅ Kiiruse kontroll
+    const moveX = dx * player.speed * delta;
+    const moveY = dy * player.speed * delta;
+    const distance = Math.sqrt(moveX * moveX + moveY * moveY);
+    const maxDistance = player.speed * delta * 1.1; // 10% tolerants
+
+    if (distance > maxDistance) {
+      console.warn(`[CHEAT] Mängija ${playerId}: liiga kiire liikumine!`);
+      this.flagPlayer(playerId, 'speed_hack');
+      return;
+    }
+
+    // ✅ Seinade kontroll
+    const newX = player.x + moveX;
+    const newY = player.y + moveY;
+    if (this.isWalkable(newX, newY)) {
+      player.x = newX;
+      player.y = newY;
+    }
+  }
+
+  handleDamage(attackerId: string, targetId: string): void {
+    const attacker = this.players.get(attackerId);
+    const target = this.players.get(targetId);
+    if (!attacker || !target) return;
+
+    // ✅ Kauguse kontroll
+    const dist = Math.hypot(attacker.x - target.x, attacker.y - target.y);
+    if (dist > 3) { // Max rünnaku kaugus
+      console.warn(`[CHEAT] ${attackerId}: ründab kaugelt (${dist})`);
+      return;
+    }
+
+    // ✅ Cooldown kontroll
+    // ✅ Server arvutab damage, MITTE klient
+    const damage = this.calculateDamage(attacker);
+    target.hp = Math.max(0, target.hp - damage);
+  }
+
+  private flagPlayer(id: string, reason: string): void {
+    // Loggi, ära bänni kohe (false positives)
+    console.log(`[ANTI-CHEAT] Flag: ${id} — ${reason}`);
+  }
+
+  private isWalkable(x: number, y: number): boolean { return true; }
+  private calculateDamage(attacker: PlayerState): number { return 10; }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🔐 Samm 2 — Anti-Cheat Meetodid</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">antiCheat.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class AntiCheatSystem {
+  private violations: Map&lt;string, number&gt; = new Map();
+  private readonly MAX_VIOLATIONS = 5;
+
+  // 1. Kiiruse kontroll (speedhack tuvastamine)
+  checkSpeed(player: PlayerState, newPos: { x: number; y: number }, delta: number): boolean {
+    const dist = Math.hypot(newPos.x - player.x, newPos.y - player.y);
+    const maxDist = player.speed * delta * 1.2; // 20% tolerants latency jaoks
+    if (dist > maxDist) {
+      this.addViolation(player.id, 'speed');
+      return false;
+    }
+    return true;
+  }
+
+  // 2. Teleporti tuvastamine
+  checkTeleport(player: PlayerState, newPos: { x: number; y: number }): boolean {
+    const dist = Math.hypot(newPos.x - player.x, newPos.y - player.y);
+    if (dist > 50) { // Mitte keegi ei liigu 50 ühikut ühe frame'iga
+      this.addViolation(player.id, 'teleport');
+      return false;
+    }
+    return true;
+  }
+
+  // 3. Sõnumite sageduse kontroll (firerate hack)
+  private messageTimestamps: Map&lt;string, number[]&gt; = new Map();
+  
+  checkMessageRate(playerId: string, maxPerSecond = 30): boolean {
+    const now = Date.now();
+    if (!this.messageTimestamps.has(playerId)) {
+      this.messageTimestamps.set(playerId, []);
+    }
+    const timestamps = this.messageTimestamps.get(playerId)!;
+    timestamps.push(now);
+
+    // Eemalda vanemad kui 1s
+    while (timestamps.length > 0 && timestamps[0] &lt; now - 1000) {
+      timestamps.shift();
+    }
+
+    if (timestamps.length > maxPerSecond) {
+      this.addViolation(playerId, 'message_flood');
+      return false;
+    }
+    return true;
+  }
+
+  // 4. HP manipulatsiooni tuvastamine
+  checkHealth(player: PlayerState, reportedHp: number): boolean {
+    if (reportedHp > player.hp) {
+      this.addViolation(player.id, 'hp_hack');
+      return false; // HP ei saa kasvada ilma heal'imata
+    }
+    return true;
+  }
+
+  private addViolation(playerId: string, type: string): void {
+    const count = (this.violations.get(playerId) || 0) + 1;
+    this.violations.set(playerId, count);
+    console.warn(`[ANTI-CHEAT] ${playerId}: ${type} (${count}/${this.MAX_VIOLATIONS})`);
+
+    if (count >= this.MAX_VIOLATIONS) {
+      this.banPlayer(playerId);
+    }
+  }
+
+  private banPlayer(playerId: string): void {
+    console.log(`[BAN] Mängija ${playerId} banned!`);
+    // Disconnect + blacklist
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🌐 Samm 3 — Veebiturvalisus</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">webSecurity.ts — XSS, CSRF, CSP</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ====== 1. XSS KAITSE ======
+// HALB: Mängija nimi otse HTML-i
+// element.innerHTML = player.name; // ❌ &lt;script&gt;hack()&lt;/script&gt;
+
+// HEA: Sanitiseeri sisend
+function sanitize(input: string): string {
+  const div = document.createElement('div');
+  div.textContent = input; // Automaatne escaping
+  return div.innerHTML;
+}
+
+// Või kasuta DOMPurify:
+// import DOMPurify from 'dompurify';
+// element.innerHTML = DOMPurify.sanitize(player.name);
+
+// ====== 2. TURVALINE WebSocket ======
+import { WebSocketServer } from 'ws';
+import jwt from 'jsonwebtoken';
+
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on('connection', (ws, req) =&gt; {
+  // Autentimise token päisest
+  const token = new URL(req.url!, 'http://localhost').searchParams.get('token');
+  
+  try {
+    const payload = jwt.verify(token!, process.env.JWT_SECRET!);
+    ws.userId = (payload as any).userId;
+  } catch {
+    ws.close(4001, 'Unauthorized');
+    return;
+  }
+
+  // Rate limiting
+  let messageCount = 0;
+  const resetInterval = setInterval(() =&gt; { messageCount = 0; }, 1000);
+
+  ws.on('message', (raw) =&gt; {
+    messageCount++;
+    if (messageCount > 60) {
+      ws.close(4002, 'Rate limit exceeded');
+      return;
+    }
+
+    // Valideeri JSON
+    try {
+      const msg = JSON.parse(raw.toString());
+      if (!isValidMessage(msg)) throw new Error('Invalid format');
+      handleMessage(ws, msg);
+    } catch {
+      ws.close(4003, 'Invalid message');
+    }
+  });
+
+  ws.on('close', () =&gt; clearInterval(resetInterval));
+});
+
+// ====== 3. CSP HEADER ======
+// Express middleware:
+// app.use((req, res, next) =&gt; {
+//   res.setHeader('Content-Security-Policy',
+//     "default-src 'self'; " +
+//     "script-src 'self'; " +      // Ainult oma skriptid
+//     "style-src 'self' 'unsafe-inline'; " +
+//     "img-src 'self' data: blob:; " +
+//     "connect-src 'self' wss://yourserver.com"
+//   );
+//   next();
+// });</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14b" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Serveri-poolne valideerimine</h4>
+              <p>Loo lihtne mänguserver: mängija liikumine ainult serveris. Klient saadab input, server vastab positsiooniga. Testi DevToolsiga manipuleerimist.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14b" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Anti-cheat süsteem</h4>
+              <p>Loo AntiCheat: speed check, teleport detection, rate limiting. Violation counter → ban. Testi: modifitseeri kliendi koodi ja vaata kas server tuvastab.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14b" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Turvaline chat süsteem</h4>
+              <p>Mängusisene chat: XSS kaitse (sanitize), profanity filter, rate limiting (max 5 sõnumit/10s). Serveri-poolne logi. Mute funktsioon.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14b" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>JWT autentimine mängus</h4>
+              <p>Login → JWT token → WebSocket autentimine. Token expiry + refresh. Turvaline salvestamine (httpOnly cookie vs memory). Logout kõigist seadmetest.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-14b" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Skooride turvaline salvestamine</h4>
+              <p>Leaderboard: skoorid ainult serveris. Klient saadab mängutegevused, server arvutab skoori. HMAC allkiri lisaturvalisuseks. Replay valideerimine.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../14-optimeerimine/index.html" class="btn btn-secondary">← Moodul 14</a>
+        <a href="../15-publitseerimine/index.html" class="btn btn-primary">Moodul 15: Publitseerimine →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

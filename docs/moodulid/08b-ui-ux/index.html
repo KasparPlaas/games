@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 08b · UI/UX Mängudes — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>08b · UI/UX Mängudes</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size:0.85rem;">MOODUL 08b · TASE 3 — KESKMINE</div>
+        <h1>🎨 UI/UX Mängu Disain</h1>
+        <p class="module-subtitle">HUD disain, menüüsüsteemid, juurdepääsetavus, mängukogemuse disain — kuidas luua intuitiivset ja nauditavat mängukogemust.</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~4-5 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🟠 Keskmine</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>📊 Samm 1 — HUD (Heads-Up Display)</h2>
+        <p>HUD näitab olulist infot ilma mängu katkestamata: tervis, skoor, relv, minikaart.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">hud.ts — HUD süsteem</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>class HUD {
+  private elements: HUDElement[] = [];
+
+  add(element: HUDElement): void {
+    this.elements.push(element);
+  }
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Ignoreeri kaamerat
+    for (const el of this.elements) {
+      el.draw(ctx);
+    }
+    ctx.restore();
+  }
+}
+
+// Tervisriba
+class HealthBar implements HUDElement {
+  constructor(
+    private x: number, private y: number,
+    private width: number, private height: number,
+    private player: { health: number; maxHealth: number }
+  ) {}
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    const pct = this.player.health / this.player.maxHealth;
+
+    // Taust
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    // Tervis (värvivahetus)
+    const color = pct > 0.6 ? '#22c55e' : pct > 0.3 ? '#eab308' : '#ef4444';
+    ctx.fillStyle = color;
+    ctx.fillRect(this.x, this.y, this.width * pct, this.height);
+
+    // Ääris
+    ctx.strokeStyle = '#374151';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+    // Tekst
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `${this.player.health}/${this.player.maxHealth}`,
+      this.x + this.width / 2,
+      this.y + this.height / 2 + 4
+    );
+  }
+}
+
+// Skoor animatsiooniga
+class ScoreDisplay implements HUDElement {
+  private displayScore = 0;  // Animeeritud väärtus
+  private targetScore = 0;
+
+  constructor(private x: number, private y: number) {}
+
+  setScore(score: number): void {
+    this.targetScore = score;
+  }
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    // Sujuv skoori tõus
+    if (this.displayScore < this.targetScore) {
+      this.displayScore += Math.ceil((this.targetScore - this.displayScore) * 0.1);
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText(`⭐ ${this.displayScore}`, this.x, this.y);
+  }
+}
+
+// Minikaart
+class Minimap implements HUDElement {
+  constructor(
+    private x: number, private y: number,
+    private size: number,
+    private world: { width: number; height: number },
+    private entities: { x: number; y: number; type: string }[]
+  ) {}
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    const scale = this.size / Math.max(this.world.width, this.world.height);
+
+    // Taust
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+    ctx.fillRect(this.x, this.y, this.size, this.size);
+    ctx.strokeStyle = '#475569';
+    ctx.strokeRect(this.x, this.y, this.size, this.size);
+
+    // Entiteedid
+    for (const e of this.entities) {
+      const mx = this.x + e.x * scale;
+      const my = this.y + e.y * scale;
+      ctx.fillStyle = e.type === 'player' ? '#22c55e' :
+                      e.type === 'enemy' ? '#ef4444' : '#3b82f6';
+      ctx.fillRect(mx - 2, my - 2, 4, 4);
+    }
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📋 Samm 2 — Menüüsüsteem</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">menu.ts — Navigeeritav menüü</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface MenuItem {
+  label: string;
+  action: () => void;
+  disabled?: boolean;
+}
+
+class Menu {
+  private items: MenuItem[] = [];
+  private selectedIndex = 0;
+
+  constructor(private x: number, private y: number) {}
+
+  addItem(item: MenuItem): void {
+    this.items.push(item);
+  }
+
+  up(): void {
+    do {
+      this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
+    } while (this.items[this.selectedIndex].disabled);
+  }
+
+  down(): void {
+    do {
+      this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
+    } while (this.items[this.selectedIndex].disabled);
+  }
+
+  select(): void {
+    const item = this.items[this.selectedIndex];
+    if (item && !item.disabled) item.action();
+  }
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    const lineHeight = 50;
+    const padding = 20;
+
+    for (let i = 0; i < this.items.length; i++) {
+      const item = this.items[i];
+      const y = this.y + i * lineHeight;
+      const isSelected = i === this.selectedIndex;
+
+      // Valitud elemendi taust
+      if (isSelected) {
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.15)';
+        ctx.fillRect(this.x - padding, y - 15, 300, lineHeight - 5);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillText('▶', this.x - padding + 5, y + 8);
+      }
+
+      // Tekst
+      ctx.font = isSelected ? 'bold 22px Inter' : '20px Inter';
+      ctx.fillStyle = item.disabled ? '#4b5563'
+                    : isSelected ? '#22c55e' : '#d1d5db';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.label, this.x, y + 8);
+    }
+  }
+}
+
+// const mainMenu = new Menu(300, 250);
+// mainMenu.addItem({ label: 'Alusta Mängu', action: () => startGame() });
+// mainMenu.addItem({ label: 'Seaded', action: () => openSettings() });
+// mainMenu.addItem({ label: 'Paremusjärjestus', action: () => showLeaderboard() });
+// mainMenu.addItem({ label: 'Välju', action: () => quitGame() });</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>💬 Samm 3 — Dialoogisüsteem</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">dialog.ts — Typewriter efektiga dialoog</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface DialogLine {
+  speaker: string;
+  text: string;
+  portrait?: string;
+}
+
+class DialogSystem {
+  private lines: DialogLine[] = [];
+  private currentLine = 0;
+  private displayedText = '';
+  private charIndex = 0;
+  private timer = 0;
+  private charSpeed = 30; // ms tähemärgi kohta
+  public active = false;
+
+  show(lines: DialogLine[]): void {
+    this.lines = lines;
+    this.currentLine = 0;
+    this.displayedText = '';
+    this.charIndex = 0;
+    this.active = true;
+  }
+
+  advance(): void {
+    const line = this.lines[this.currentLine];
+    if (this.charIndex < line.text.length) {
+      // Näita kogu tekst kohe
+      this.displayedText = line.text;
+      this.charIndex = line.text.length;
+    } else {
+      // Järgmine rida
+      this.currentLine++;
+      if (this.currentLine >= this.lines.length) {
+        this.active = false;
+        return;
+      }
+      this.displayedText = '';
+      this.charIndex = 0;
+    }
+  }
+
+  update(dt: number): void {
+    if (!this.active) return;
+    const line = this.lines[this.currentLine];
+    if (this.charIndex < line.text.length) {
+      this.timer += dt * 1000;
+      while (this.timer >= this.charSpeed && this.charIndex < line.text.length) {
+        this.displayedText += line.text[this.charIndex];
+        this.charIndex++;
+        this.timer -= this.charSpeed;
+      }
+    }
+  }
+
+  draw(ctx: CanvasRenderingContext2D): void {
+    if (!this.active) return;
+    const line = this.lines[this.currentLine];
+
+    // Dialoogikast
+    const y = ctx.canvas.height - 150;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+    ctx.fillRect(20, y, ctx.canvas.width - 40, 130);
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, y, ctx.canvas.width - 40, 130);
+
+    // Kõneleja nimi
+    ctx.fillStyle = '#3b82f6';
+    ctx.font = 'bold 16px Inter';
+    ctx.fillText(line.speaker, 40, y + 25);
+
+    // Tekst
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Inter';
+    this.wrapText(ctx, this.displayedText, 40, y + 50, ctx.canvas.width - 80, 20);
+
+    // "Jätka" viide
+    if (this.charIndex >= line.text.length) {
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Inter';
+      ctx.fillText('▼ Vajuta SPACE', ctx.canvas.width - 140, y + 115);
+    }
+  }
+
+  private wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number): void {
+    const words = text.split(' ');
+    let line = '';
+    let lineY = y;
+    for (const word of words) {
+      const test = line + word + ' ';
+      if (ctx.measureText(test).width > maxWidth) {
+        ctx.fillText(line, x, lineY);
+        line = word + ' ';
+        lineY += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line, x, lineY);
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>♿ Samm 4 — Juurdepääsetavus</h2>
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>
+            <p><strong>Mängude juurdepääsetavuse põhimõtted:</strong></p>
+            <ul>
+              <li><strong>Värvid:</strong> Ära kasuta ainult värvi info edastamiseks — lisa kujundid/ikoonid</li>
+              <li><strong>Tekst:</strong> Minimaalselt 16px, hea kontrastisuhe (4.5:1)</li>
+              <li><strong>Sisend:</strong> Toeta nii klaviatuuri kui hiirt, konfigureeritavad klahvid</li>
+              <li><strong>Tempo:</strong> Pause vajaduse korral, raskusastme valik</li>
+              <li><strong>Subtiitrid:</strong> Igale olulisele helile teksti alternatiiv</li>
+              <li><strong>Värvipimeda režiim:</strong> Alternatiivne värviskeem</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">settings.ts — Juurdepääsetavuse seaded</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>interface AccessibilitySettings {
+  screenShake: boolean;
+  flashEffects: boolean;
+  subtitles: boolean;
+  colorblindMode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+  textSize: 'small' | 'medium' | 'large';
+  autoAim: boolean;
+  difficulty: 'easy' | 'normal' | 'hard';
+}
+
+const defaultSettings: AccessibilitySettings = {
+  screenShake: true,
+  flashEffects: true,
+  subtitles: true,
+  colorblindMode: 'none',
+  textSize: 'medium',
+  autoAim: false,
+  difficulty: 'normal',
+};
+
+// Värvipimeda palettid
+const colorSchemes = {
+  none: { player: '#22c55e', enemy: '#ef4444', item: '#3b82f6' },
+  protanopia: { player: '#2563eb', enemy: '#f59e0b', item: '#8b5cf6' },
+  deuteranopia: { player: '#06b6d4', enemy: '#f97316', item: '#a855f7' },
+  tritanopia: { player: '#ec4899', enemy: '#14b8a6', item: '#6366f1' },
+};</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08b" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>HUD süsteemi ehitamine</h4>
+              <p>Loo HUD: tervisriba (animeeritud), skoor (sujuv tõus), relvaindikaator, minikaart. Kogu HUD peab ignoreerima kaamerat ja olema alati nähtav.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08b" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Menüüsüsteem</h4>
+              <p>Loo navigeeritav menüü: Main Menu, Settings, Controls. Toeta klaviatuuri (üles/alla/enter) JA hiirekliki. Lisa animeeritud valik ja hover efektid.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08b" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Dialoogisüsteem</h4>
+              <p>Ehita typewriter-efektiga dialoogisüsteem. Lisa kõneleja portree, erinevad kõnetempod, teksti murdmine. SPACE jätkamiseks, kogu teksti vahele jätmine.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08b" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Juurdepääsetavuse seaded</h4>
+              <p>Lisa mängu juurdepääsetavuse menüü: värvipimeda režiim (3 varianti), teksti suurus, ekraani raputuse toggle, subtiitrid, raskusaste. Salvesta localStorage'i.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-08b" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>UI animatsioonid ja juice</h4>
+              <p>Lisa "game juice": skoori lisandumisel popup tekst (+10!), tervisriba raputus tabamuse korral, menüüelemendid libisevad sisse, nupu hover skaleerimine, ekraani freeze-frame.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../08-cicd/index.html" class="btn btn-secondary">← Moodul 08</a>
+        <a href="../09-multiplayer/index.html" class="btn btn-primary">Moodul 09: Multiplayer →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>

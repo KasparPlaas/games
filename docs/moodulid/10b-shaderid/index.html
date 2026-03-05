@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="et" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodul 10b · Shaderid ja Visuaalsed Efektid — GameDev.ee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../index.html" class="site-logo"><span class="logo-icon">🎮</span><span>GameDev.ee</span></a>
+      <nav class="header-nav">
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <a href="../../index.html#roadmap">Teekond</a>
+        <button class="theme-toggle" aria-label="Vaheta teemat">🌙</button>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Menüü">☰</button>
+    </div>
+  </header>
+
+  <main class="module-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="../../index.html">Avaleht</a>
+        <span class="separator">›</span>
+        <a href="../../index.html#moodulid">Moodulid</a>
+        <span class="separator">›</span>
+        <span>10b · Shaderid ja Visuaalsed Efektid</span>
+      </nav>
+
+      <div class="module-hero">
+        <div class="module-number" style="font-size:0.85rem;">MOODUL 10b · TASE 4 — EDASIJÕUDNUD+</div>
+        <h1>✨ Shaderid ja Visuaalsed Efektid</h1>
+        <p class="module-subtitle">GLSL vertex/fragment shaderid, post-processing, bloom, cel-shading — kontrolli iga pikslit ekraanil!</p>
+        <div class="module-meta">
+          <span class="meta-item">⏱️ ~5-7 tundi</span>
+          <span class="meta-item">📝 5 harjutust</span>
+          <span class="meta-item">🔴 Edasijõudnud+</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <h2>🎨 Samm 1 — GLSL Põhialused</h2>
+        <p>Shaderid on programmid mis jooksevad GPU-l. <strong>Vertex shader</strong> liigutab punkte, <strong>fragment shader</strong> värvib piksleid.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">vertex.glsl</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Vertex Shader — iga tipu jaoks
+uniform float uTime;
+
+varying vec2 vUv;       // Edasta fragment shaderile
+varying vec3 vNormal;
+varying vec3 vPosition;
+
+void main() {
+  vUv = uv;
+  vNormal = normal;
+  vPosition = position;
+
+  // Laineline deformatsioon
+  vec3 pos = position;
+  pos.y += sin(pos.x * 3.0 + uTime * 2.0) * 0.3;
+  pos.y += cos(pos.z * 2.0 + uTime * 1.5) * 0.2;
+
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">fragment.glsl</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Fragment Shader — iga piksli jaoks
+uniform float uTime;
+uniform vec3 uColor;
+uniform sampler2D uTexture;
+
+varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vPosition;
+
+void main() {
+  // Lihtne valgustusmudel
+  vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+  float diff = max(dot(vNormal, lightDir), 0.0);
+
+  // Aeg-põhine värvivahetus
+  vec3 color = uColor;
+  color.r += sin(uTime) * 0.2;
+  color.g += cos(uTime * 0.7) * 0.2;
+
+  // Lõplik piksel
+  gl_FragColor = vec4(color * (diff * 0.8 + 0.2), 1.0);
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🔧 Samm 2 — ShaderMaterial Three.js-s</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">customShader.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import * as THREE from 'three';
+
+const customMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uColor: { value: new THREE.Color(0.13, 0.77, 0.36) },
+    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+  },
+  vertexShader: `
+    uniform float uTime;
+    varying vec2 vUv;
+    varying vec3 vNormal;
+
+    void main() {
+      vUv = uv;
+      vNormal = normal;
+
+      vec3 pos = position;
+      pos += normal * sin(pos.y * 5.0 + uTime * 3.0) * 0.1;
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform vec3 uColor;
+    varying vec2 vUv;
+    varying vec3 vNormal;
+
+    void main() {
+      // Fresnel efekt (ääre helendus)
+      vec3 viewDir = normalize(cameraPosition - vNormal);
+      float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 3.0);
+
+      vec3 color = uColor + fresnel * vec3(0.3, 0.6, 1.0);
+
+      // Pulseeriv alpha
+      float alpha = 0.8 + sin(uTime * 2.0) * 0.2;
+
+      gl_FragColor = vec4(color, alpha);
+    }
+  `,
+  transparent: true,
+  side: THREE.DoubleSide,
+});
+
+// Mängutsüklis:
+// customMaterial.uniforms.uTime.value = clock.getElapsedTime();</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🌟 Samm 3 — Post-Processing</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">postprocessing.ts</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
+
+// Composer
+const composer = new EffectComposer(renderer);
+
+// 1. Render pass — põhi renderdamine
+composer.addPass(new RenderPass(scene, camera));
+
+// 2. Bloom — helendusefekt
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.8,   // strength
+  0.3,   // radius
+  0.85   // threshold
+);
+composer.addPass(bloomPass);
+
+// 3. Custom post-processing shader (vignette)
+const vignetteShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uIntensity: { value: 0.4 },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uIntensity;
+    varying vec2 vUv;
+    void main() {
+      vec4 color = texture2D(tDiffuse, vUv);
+      float dist = distance(vUv, vec2(0.5));
+      color.rgb *= 1.0 - dist * uIntensity;
+      gl_FragColor = color;
+    }
+  `,
+};
+composer.addPass(new ShaderPass(vignetteShader));
+
+// Mängutsüklis kasuta composer.render() mitte renderer.render()
+function animate() {
+  requestAnimationFrame(animate);
+  composer.render();
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>🖌️ Samm 4 — Populaarsed Shader Efektid</h2>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Cel-shading (Toon)</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// Fragment shader — cel-shading
+fragmentShader: `
+  varying vec3 vNormal;
+  uniform vec3 uColor;
+  uniform vec3 uLightDir;
+
+  void main() {
+    float intensity = dot(normalize(vNormal), normalize(uLightDir));
+
+    // Kvantiseeri valgus 4 tasemele
+    vec3 color;
+    if (intensity > 0.95)      color = uColor * 1.0;
+    else if (intensity > 0.5)  color = uColor * 0.7;
+    else if (intensity > 0.25) color = uColor * 0.4;
+    else                       color = uColor * 0.2;
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`,
+
+// Piirjoonte shader (outline)
+// Teine pass — suurenda objekti normaalide suunas ja joonista mustana
+outlineVertexShader: `
+  void main() {
+    vec3 pos = position + normal * 0.05;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`,
+outlineFragmentShader: `
+  void main() {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  }
+`</code></pre>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>📝 Harjutused</h2>
+        <ul class="exercise-list">
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-10b" data-index="0" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Esimene custom shader</h4>
+              <p>Loo ShaderMaterial: vertex shader liigutab tippe sinusoidaalselt, fragment shader värvib UV-koordinaatide järgi. Lisa <code>uTime</code> uniform animatsiooniks.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-10b" data-index="1" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Fresnel ja hologramm efekt</h4>
+              <p>Loo hologrammiline materjal: läbipaistev keskelt, helendav äärtest (Fresnel). Lisa skaneerimisjoone efekt mis liigub üles-alla. Sinine toon.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-10b" data-index="2" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Post-processing pipeline</h4>
+              <p>Seadista EffectComposer: Bloom (helendavad objektid), vignette (pimenev ääris), chromatic aberration (värvi nihe). GUI kontrollid igale efektile.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-10b" data-index="3" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Cel-shading / toon shader</h4>
+              <p>Loo cel-shading materjal: kvantiseeritud valgustus (3-4 astet), must piirjoon (outline pass). Rakenda 3D tegelasele. Anime/joonistusfilmi stiil.</p>
+            </div>
+          </li>
+          <li class="exercise-item">
+            <button class="exercise-checkbox" data-module="mod-10b" data-index="4" aria-label="Märgi tehtuks"></button>
+            <div class="exercise-content">
+              <h4>Shader galerii</h4>
+              <p>Loo veebileht 6+ erineva shader efektiga: vesi, tuli, portaal, dissolve, force field, glitch. Iga efekt oma sfääri/kuubiku peal. Lisa GUI kontrollid.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2xl);padding-top:var(--space-xl);border-top:1px solid var(--border-color);">
+        <a href="../10-threejs/index.html" class="btn btn-secondary">← Moodul 10</a>
+        <a href="../11-3d-mootor/index.html" class="btn btn-primary">Moodul 11: 3D Mängumootor →</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-content"><p>🎮 Mängude Loomine — Nullist Spetsialistini © 2026</p><div class="footer-links"><a href="../../index.html">Avaleht</a></div></div></div></footer>
+  <script src="../../assets/js/main.js"></script>
+</body>
+</html>
