@@ -325,59 +325,392 @@ const game = new Phaser.Game(config);</code></pre>
 
       <section class="content-section">
         <h2>🗺️ Samm 5 — Tilemap'id (Tiled)</h2>
-        <p>Tilemap võimaldab visuaalselt disainida mängu tasemeid <a href="https://www.mapeditor.org/" target="_blank">Tiled</a> editoriga.</p>
+        <p>Tilemap võimaldab visuaalselt disainida mängu tasemeid <a href="https://www.mapeditor.org/" target="_blank">Tiled</a> editoriga. See on 2D mängude "level editor" standard.</p>
+
+        <div class="callout info">
+          <span class="callout-icon">ℹ️</span>
+          <div>
+            <p><strong>Tiled töövoog:</strong> Laadi alla <a href="https://www.mapeditor.org/" target="_blank">Tiled Map Editor</a> (tasuta). Loo uus kaart → määra tile suurus (nt 32x32) → impordi tileset pilt → joonista kihid → ekspordi JSON.</p>
+          </div>
+        </div>
 
         <div class="code-block">
-          <div class="code-header"><span class="code-lang">Tilemap laadimine</span><button class="code-copy">Kopeeri</button></div>
-          <pre><code>// BootScene preload:
+          <div class="code-header"><span class="code-lang">Tiled — Kaardi loomine samm-sammult</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code># 1. Ava Tiled → File → New → New Map
+#    Orientation: Orthogonal
+#    Tile size: 32 x 32 px
+#    Map size: 40 x 30 tiles (1280 x 960 px)
+
+# 2. Tileset: Map → New Tileset
+#    Name: "tileset"
+#    Source: tileset.png (nt kenney.nl tiles)
+#    Tile width/height: 32 x 32
+
+# 3. Loo kihid (Layers panel):
+#    - "Ground"  → muru, liiv, vesi (aluskiht)
+#    - "Walls"   → seinad, kivid, platvormid
+#    - "Decor"   → puud, lilled, lambid (ülekiht)
+#    - "Objects" → Object Layer (spawn points, kogutavad jne)
+
+# 4. Walls kihi omadused:
+#    Vali tile → Properties → Lisa: collides = true (boolean)
+#    Nii saab Phaser teada millised tile'd blokeerivad liikumist
+
+# 5. Object Layer:
+#    Insert Point → nimeta "PlayerSpawn" (x, y positsioon)
+#    Insert Point → nimeta "CoinSpawn" (mitu tükki)
+#    Insert Rectangle → nimeta "KillZone" (ohtlik ala)
+
+# 6. Ekspordi: File → Export As → level1.json
+#    Kopeeri JSON + tileset.png → assets/maps/ kausta</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">BootScene.js — Tilemap varade laadimine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// preload() meetodis:
+
+// Tilemap JSON (Tiled eksport)
 this.load.tilemapTiledJSON('level1', 'assets/maps/level1.json');
-this.load.image('tiles', 'assets/maps/tileset.png');
+this.load.tilemapTiledJSON('level2', 'assets/maps/level2.json');
 
-// GameScene create:
-const map = this.make.tilemap({ key: 'level1' });
-const tileset = map.addTilesetImage('tileset', 'tiles');
+// Tileset pildid (peab kattuma Tiled tileset nimega!)
+this.load.image('terrain-tiles', 'assets/maps/terrain.png');
+this.load.image('decor-tiles', 'assets/maps/decorations.png');</code></pre>
+        </div>
 
-// Kihid (Layers)
-const groundLayer = map.createLayer('Ground', tileset, 0, 0);
-const wallsLayer = map.createLayer('Walls', tileset, 0, 0);
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">GameScene.js — Tilemap loomine ja kihtide seadistamine</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>create() {
+  // ---- TILEMAP ----
+  const map = this.make.tilemap({ key: 'level1' });
 
-// Seina kiht blokeerib liikumist
-wallsLayer.setCollisionByProperty({ collides: true });
-this.physics.add.collider(this.player, wallsLayer);
+  // Ühenda tileset pilt nimega Tiled-is
+  // addTilesetImage("nimi Tiled-is", "Phaser cache key")
+  const terrain = map.addTilesetImage('terrain', 'terrain-tiles');
+  const decor = map.addTilesetImage('decorations', 'decor-tiles');
 
-// Kaamera jälgib mängijat
-this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);</code></pre>
+  // ---- KIHID (alumisest ülemiseni) ----
+  const groundLayer = map.createLayer('Ground', terrain, 0, 0);
+  const wallsLayer = map.createLayer('Walls', terrain, 0, 0);
+  const decorLayer = map.createLayer('Decor', decor, 0, 0);
+
+  // Dekoratsioonid mängija EES (sügavus)
+  decorLayer.setDepth(10);
+
+  // ---- KOKKUPÕRKED ----
+
+  // Variant A: Property järgi (Tiled-is märgitud collides=true)
+  wallsLayer.setCollisionByProperty({ collides: true });
+
+  // Variant B: Tile indeksite järgi
+  // wallsLayer.setCollision([1, 2, 5, 6, 12, 13]);
+
+  // Variant C: Kõik mitte-tühjad tile'd
+  // wallsLayer.setCollisionByExclusion([-1]);
+
+  // ---- MÄNGIJA SPAWN ----
+  // Loe spawn point Object Layer'ist
+  const spawnPoint = map.findObject('Objects', obj => obj.name === 'PlayerSpawn');
+  this.player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'player');
+  this.player.setCollideWorldBounds(true);
+
+  // Füüsika kokkupõrge tile kihtidega
+  this.physics.add.collider(this.player, wallsLayer);
+
+  // ---- KOGUTAVAD OBJEKTID (Object Layer'ist) ----
+  this.coins = this.physics.add.group({ allowGravity: false });
+
+  const coinObjects = map.filterObjects('Objects', obj => obj.name === 'CoinSpawn');
+  coinObjects.forEach(coinObj => {
+    const coin = this.coins.create(coinObj.x, coinObj.y, 'coin');
+    coin.setOrigin(0.5, 1); // Tiled kasutab bottom-left origin
+  });
+
+  this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
+
+  // ---- OHTLIKUD ALAD (Rectangles Object Layer'ist) ----
+  const killZones = map.filterObjects('Objects', obj => obj.name === 'KillZone');
+  killZones.forEach(zone => {
+    const zoneSprite = this.add.zone(zone.x + zone.width / 2, zone.y + zone.height / 2,
+      zone.width, zone.height);
+    this.physics.world.enable(zoneSprite);
+    zoneSprite.body.setAllowGravity(false);
+    this.physics.add.overlap(this.player, zoneSprite, this.playerDie, null, this);
+  });
+
+  // ---- KAAMERA ----
+  // Maailma piirid = kaardi suurus
+  this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+  // Kaamera jälgib mängijat sujuvalt
+  this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+  this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+  // Dead zone: kaamera ei liigu kui mängija on ekraani keskel
+  this.cameras.main.setDeadzone(200, 150);
+}
+
+collectCoin(player, coin) {
+  coin.disableBody(true, true); // Eemalda füüsika + peida
+  this.score += 10;
+  this.scoreText.setText('Mündid: ' + this.score);
+  this.sound.play('coinCollect');
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Parallax taust tilemap'iga</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>create() {
+  // Parallax taustakihid (liiguvad aeglasemalt kui kaamera)
+  // scrollFactor < 1 = liigub aeglasemalt (kaugel)
+  // scrollFactor = 1 = liigub kaameraga kaasa (normaalne)
+
+  // Taevas (ei liigu üldse)
+  this.add.image(400, 200, 'sky').setScrollFactor(0);
+
+  // Kauged mäed (liiguvad väga aeglaselt)
+  this.add.tileSprite(400, 400, 800, 200, 'mountains')
+    .setScrollFactor(0.1);
+
+  // Lähemad puud
+  this.add.tileSprite(400, 450, 800, 200, 'trees')
+    .setScrollFactor(0.4);
+
+  // ... siis tilemap kihid (scrollFactor = 1, vaikimisi)
+}</code></pre>
+        </div>
+
+        <div class="callout callout-tip">
+          <strong>💡 Vihje</strong>
+          <p>Tilemap'id toetavad ka <strong>animeeritud tile'e</strong> — Tiled-is: Tileset → Animation Editor. Sobib ideaalselt vee, laava ja tule tile'idele!</p>
         </div>
       </section>
 
       <section class="content-section">
         <h2>🎬 Samm 6 — Tweens ja Efektid</h2>
+        <p>Tweens on Phaser'i <strong>animatsioonimootor</strong> mis interpoleerib väärtusi ajas. Ideaalne UI animatsioonide, mündi hõljumise, surmaefektide ja "juice" lisamise jaoks.</p>
+
         <div class="code-block">
-          <div class="code-header"><span class="code-lang">Phaser Tweens</span><button class="code-copy">Kopeeri</button></div>
-          <pre><code>// Hõljuv animatsioon
+          <div class="code-header"><span class="code-lang">tweens.js — Põhilised tweenid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ============================================
+// 1. HÕLJUV MÜNT (üles-alla, lõpmatu)
+// ============================================
 this.tweens.add({
   targets: coin,
-  y: coin.y - 10,
-  duration: 800,
-  ease: 'Sine.easeInOut',
-  yoyo: true,
-  repeat: -1
+  y: coin.y - 10,       // Liigu 10px üles
+  duration: 800,         // 0.8 sekundit
+  ease: 'Sine.easeInOut', // Sujuv kiirendus/aeglustus
+  yoyo: true,            // Tagasi algpositsioonile
+  repeat: -1             // Lõpmatu kordus
 });
 
-// Surma animatsioon
-this.tweens.add({
-  targets: enemy,
-  alpha: 0,
-  scale: 2,
-  angle: 360,
-  duration: 400,
-  onComplete: () => enemy.destroy()
-});
+// ============================================
+// 2. MÜNDI KOGUMINE (scale up + fade out)
+// ============================================
+collectCoin(player, coin) {
+  coin.disableBody(true, false); // Keela füüsika, ära peida veel
 
-// Ekraani raputus
+  this.tweens.add({
+    targets: coin,
+    y: coin.y - 40,     // Lenda üles
+    alpha: 0,            // Fade out
+    scale: 1.5,          // Suurenda
+    duration: 300,
+    ease: 'Power2',
+    onComplete: () => coin.destroy()
+  });
+
+  // "+10" tekst mis lendab üles
+  const scorePopup = this.add.text(coin.x, coin.y, '+10', {
+    fontSize: '20px', fontFamily: 'Inter', color: '#ffd700',
+    stroke: '#000', strokeThickness: 3
+  }).setOrigin(0.5);
+
+  this.tweens.add({
+    targets: scorePopup,
+    y: scorePopup.y - 50,
+    alpha: 0,
+    duration: 600,
+    ease: 'Power2',
+    onComplete: () => scorePopup.destroy()
+  });
+}
+
+// ============================================
+// 3. VAENLASE SURM (keerlev + fade)
+// ============================================
+killEnemy(enemy) {
+  enemy.disableBody(true, false);
+  enemy.setTint(0xff0000); // Punane flash
+
+  this.tweens.add({
+    targets: enemy,
+    alpha: 0,
+    scale: 2,
+    angle: 360,
+    duration: 400,
+    ease: 'Power3',
+    onComplete: () => enemy.destroy()
+  });
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Kaameraefektid ja ekraaniraputus</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ============================================
+// 4. KAAMERAEFEKTID
+// ============================================
+
+// Ekraani raputus (tabamus, plahvatus)
 this.cameras.main.shake(200, 0.005);
-this.cameras.main.flash(100, 255, 0, 0);</code></pre>
+
+// Punane flash (damage)
+this.cameras.main.flash(100, 255, 0, 0, true);
+
+// Fade out → fade in (stseeni vahetus)
+this.cameras.main.fadeOut(500, 0, 0, 0);
+this.cameras.main.once('camerafadeoutcomplete', () => {
+  this.scene.start('NextLevel');
+});
+
+// Aeglane zoom efekt (boss ilmumine)
+this.tweens.add({
+  targets: this.cameras.main,
+  zoom: 1.3,
+  duration: 1000,
+  ease: 'Sine.easeInOut',
+  yoyo: true
+});
+
+// Slow motion efekt!
+sloMo() {
+  this.time.timeScale = 0.3;  // 30% kiirusega
+  this.tweens.add({
+    targets: this.time,
+    timeScale: 1,             // Tagasi normaalkiirusele
+    duration: 1000,
+    ease: 'Power2'
+  });
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Partikliefektid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ============================================
+// 5. PARTIKLIEFEKTID (Phaser 3.60+)
+// ============================================
+
+// Plahvatus (ühekordne)
+createExplosion(x, y) {
+  const particles = this.add.particles(x, y, 'spark', {
+    speed: { min: 80, max: 300 },
+    angle: { min: 0, max: 360 },
+    scale: { start: 0.6, end: 0 },
+    alpha: { start: 1, end: 0 },
+    lifespan: 600,
+    quantity: 20,
+    tint: [0xff4444, 0xff8800, 0xffff00], // Punane→oranž→kollane
+    emitting: false
+  });
+  particles.explode();
+
+  // Hävita emitter mälu puhastamiseks
+  this.time.delayedCall(1000, () => particles.destroy());
+}
+
+// Jälg mängija taga (pidevalt emiteerib)
+createPlayerTrail() {
+  this.playerTrail = this.add.particles(0, 0, 'dot', {
+    follow: this.player,           // Jälgi mängijat
+    followOffset: { y: 16 },      // Jalgade juurest
+    scale: { start: 0.3, end: 0 },
+    alpha: { start: 0.5, end: 0 },
+    lifespan: 400,
+    frequency: 50,                  // Iga 50ms uus partikkel
+    tint: 0xaaaaff,
+    blendMode: 'ADD'               // Helendav efekt
+  });
+}
+
+// Vihm
+createRain() {
+  this.add.particles(400, -10, 'raindrop', {
+    x: { min: -400, max: 400 },
+    speedY: { min: 300, max: 500 },
+    speedX: { min: -20, max: -50 },
+    scale: { min: 0.1, max: 0.3 },
+    alpha: { min: 0.3, max: 0.6 },
+    lifespan: 2000,
+    frequency: 20,
+    quantity: 2
+  });
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">UI tweenid ja Ease funktsioonid</span><button class="code-copy">Kopeeri</button></div>
+          <pre><code>// ============================================
+// 6. UI ANIMATSIOONID
+// ============================================
+
+// Menüü nupp ilmumine (alt üles + fade in)
+showMenu(buttons) {
+  buttons.forEach((btn, i) => {
+    btn.setAlpha(0);
+    btn.y += 30;
+
+    this.tweens.add({
+      targets: btn,
+      alpha: 1,
+      y: btn.y - 30,
+      duration: 400,
+      delay: i * 100,  // Staggered — iga nupp hilineb 100ms
+      ease: 'Back.easeOut'  // Natuke üle vibutab
+    });
+  });
+}
+
+// "GAME OVER" tekst mis suureneb
+showGameOver() {
+  const text = this.add.text(400, 300, 'GAME OVER', {
+    fontSize: '64px', fontFamily: 'Inter', color: '#ff4444',
+    stroke: '#000', strokeThickness: 6
+  }).setOrigin(0.5).setScale(0);
+
+  this.tweens.add({
+    targets: text,
+    scale: 1,
+    duration: 600,
+    ease: 'Elastic.easeOut'  // Vedru-efekt!
+  });
+}
+
+// ============================================
+// EASE FUNKTSIOONIDE SPIKKER:
+// ============================================
+// 'Linear'          — ühtlane kiirus
+// 'Power2'          — kiirenemine (Quad)
+// 'Power3'          — veelgi kiirem kiirenemine (Cubic)
+// 'Sine.easeInOut'  — sujuv algus ja lõpp
+// 'Back.easeOut'    — läheb natuke üle ja tuleb tagasi
+// 'Bounce.easeOut'  — põrkav efekt
+// 'Elastic.easeOut' — vedru efekt
+// 'Expo.easeOut'    — järsk algus, aeglane lõpp
+//
+// Proovi visuaalselt: https://easings.net/</code></pre>
+        </div>
+
+        <div class="callout callout-tip">
+          <strong>💡 "Game Juice" kontrollnimekiri</strong>
+          <ul>
+            <li>✅ Ekraani shake tabamuse/plahvatuse korral</li>
+            <li>✅ Partiklid surma/kogumise juures</li>
+            <li>✅ Score popup mis lendab üles</li>
+            <li>✅ Tint flash (punane = damage, valge = kogutud)</li>
+            <li>✅ Slow-motion kriitilise tabamuse korral</li>
+            <li>✅ Hõljuvad/pulseerivad kogutavad esemed</li>
+            <li>✅ Sujuvad UI üleminekud (fade, slide, scale)</li>
+          </ul>
         </div>
       </section>
 
